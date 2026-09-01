@@ -1,0 +1,349 @@
+import re
+import shutil
+import sys
+from os import path
+from collections import defaultdict
+from pathlib import Path
+
+configfile: "DEF.yaml"
+
+## Shared parse-time helpers (read_bed_names, read_transcript_names_from_free,
+## read_gene_tree_names, write_species_list, transcript_wildcard_pattern).
+include: "rules/common.smk"
+
+## transcripts, config["fileSuffix"]/["treeSuffix"], and species.TOGA.dir.txt
+## are all resolved by rules/common.smk's resolve_run_inputs(), shared with
+## Snakefile_standard.
+transcripts = resolve_run_inputs()
+
+## Split three ways from phase 1's verdicts (rules/common.smk, "Two-phase run"),
+## shared with Snakefile_standard. In phase 1 and for the describe-only DAG
+## builds these are all three the full list, so nothing is filtered.
+usable, attempted, failed = resolve_verdicts(transcripts)
+
+## Suffix pair this Snakefile names its HyPhy outputs with. Read by
+## rules/archive_results.smk (selection_report) and passed to
+## analysis_output_files() below.
+ABSREL_KEYWORD = "_i_tree"
+HYPHY_KEYWORD = ".i_tree"
+
+wildcard_constraints:
+    transcript_id = transcript_wildcard_pattern(transcripts),
+
+## Create the desired output files
+def gather_input():
+    all_input = []
+
+    all_input.extend(expand("codon_alignments/{transcript_id}/done.txt", transcript_id = attempted))
+    all_input.extend(expand("codon_alignments/{transcript_id}/tmp.cleaned", transcript_id = attempted))
+    all_input.append("skipped_transcripts.tsv")
+    all_input.extend(expand("codon_alignments/{transcript_id}/results.cleaned", transcript_id = attempted))
+    all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa", transcript_id = attempted))
+    all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt", transcript_id = attempted))
+
+    return all_input
+
+all_input = gather_input()
+
+# Define a new default target 
+rule all:
+    input:
+        all_input,
+
+## Phase 1's target: `snakemake --config sleasy_phase=validate validated`.
+## Defined after rule all so it can never become the default target.
+rule validated:
+    input:
+        expand("codon_alignments/{transcript_id}/validation.txt",
+               transcript_id=transcripts),
+
+
+## Defined AFTER rule all so it cannot become the default target, and never
+## requested by a real run: it exists so `snakemake --rulegraph
+## rulegraph_reference` renders the whole workflow.
+rule rulegraph_reference:
+    input:
+        analysis_output_files(ABSREL_KEYWORD, HYPHY_KEYWORD),
+
+## These rules should be included based on which rules were activated in the config file
+include: "rules/codonify_alignment.smk"
+include: "rules/hmm_cleaning.smk"
+include: "rules/manual_cleaning.smk"
+include: "rules/validate_alignment.smk"
+## Rule to prune tree
+include: "rules/draw_tree.smk"
+
+## ISSUE: TOGA1 implementation still missing
+if config["togaMode"]:
+    sys.exit(
+        "ERROR: togaMode is set, but rules/extract_TOGA_alignment.smk does "
+        "not exist in this release. Use -toga2 for TOGA2 annotations, or "
+        "pass pre-computed alignments with -free."
+    )
+elif config["toga2Mode"]:
+    include: "rules/extract_TOGA2_alignment.smk"
+elif config["freeMode"] and config["settings"]["selectionSettings"]["doScreenOnly"]:
+    include: "rules/extract_free_alignment.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "prank_nt":
+    include: "rules/extract_free_alignment_prank.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "prank_codon":
+    include: "rules/extract_free_alignment_prank.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "macse2":
+    include: "rules/extract_free_alignment_macse.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "muscle":
+    include: "rules/extract_free_alignment_muscle.smk"
+
+## Adapt module for species Trees
+module standard:
+    snakefile:
+        "Snakefile_standard"
+
+## Run hyphy on species tree. Do this if species tree calculation is turned on in DEF.yaml: config['settings']['computeTree']['species_tree] == true
+def get_input_ali_for_defined_tree_hyphy(wildcards):
+    if config["settings"]["selectionSettings"]["doErrorCleaning"]:
+        return "codon_alignments/{transcript_id}/tmp/{transcript_id}.busted.i_tree.filtered.fa"
+    else:
+        return get_input_for_busted(wildcards)
+
+## Perform an aBSREL run, parameters are defined in the config file
+use rule absrel_run from standard as speciesTree_absrel_run with:
+    input:
+        ali=get_input_ali_for_defined_tree_hyphy,
+        tree="codon_alignments/{transcript_id}/{transcript_id}_pruned_tree.nh"
+    output:
+        "codon_alignments/{transcript_id}/{transcript_id}.absrel_i_tree.json"
+    log:
+        "logs/absrel_run/{transcript_id}_i_tree.log"
+
+
+use rule relax_run from standard as speciesTree_relax_run with:
+    input:
+        ali = get_input_ali_for_defined_tree_hyphy, #get_relax_from_checkpoint,
+        tree = "codon_alignments/{transcript_id}/{transcript_id}_pruned_tree.nh"#get_input_tree_from_defined_tree_hyphy
+    output:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}.i_tree.relax_{it}.json"
+    log:
+        "logs/relax_run/{transcript_id}_i_tree_{it}.log"
+
+## aggregate relax runs:
+use rule aggregate_relax from standard as speciesTree_aggregate_relax with:
+    input:
+        expand("codon_alignments/{{transcript_id}}/tmp/{{transcript_id}}.i_tree.relax_{it}.json",
+        it=range(config["settings"]["selectionSettings"]["RELAX"]["relaxRounds"]))
+    output:
+        "codon_alignments/{transcript_id}/{transcript_id}.i_tree.relax.aggregated.json"
+    log:
+        "logs/aggregate_relax/{transcript_id}_i_tree.log"
+
+## BUSTED
+use rule busted_run from standard as speciesTree_busted_run with:
+    input:
+        ali= get_input_for_busted,
+        tree = "codon_alignments/{transcript_id}/{transcript_id}_pruned_tree.nh"
+    output:
+        "codon_alignments/{transcript_id}/{transcript_id}.busted.i_tree.json"
+    log:
+        "logs/busted_run/{transcript_id}_i_tree.log"
+
+## Create error-corrected alignment from busted run
+use rule error_mask from standard as speciesTree_error_mask with:
+    input:
+        json = "codon_alignments/{transcript_id}/{transcript_id}.busted.i_tree.json"
+    output:
+        json = "codon_alignments/{transcript_id}/{transcript_id}.busted.i_tree.filtered.json",
+        ali = temp("codon_alignments/{transcript_id}/{transcript_id}.busted.i_tree.filtered.tmp.fa")
+    log:
+        "logs/error_mask/{transcript_id}_i_tree.log"
+
+use rule clean_error_sink_ali from standard as speciesTree_clean_error_sink_ali with:
+    input:
+        ali = "codon_alignments/{transcript_id}/{transcript_id}.busted.i_tree.filtered.tmp.fa"
+    output:
+        ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}.busted.i_tree.filtered.fa"
+    log:
+        "logs/clean_error_sink_ali/{transcript_id}_i_tree.log"
+
+## Perform an MEME run, parameters are defined in the config file
+use rule meme_run from standard as speciesTree_meme_run with:
+    input:
+        ali=get_input_ali_for_defined_tree_hyphy,
+        tree="codon_alignments/{transcript_id}/{transcript_id}_pruned_tree.nh"
+    output:
+        "codon_alignments/{transcript_id}/{transcript_id}.meme.i_tree.json"
+    log:
+        "logs/meme_run/{transcript_id}_i_tree.log"
+
+## Bayescode
+def get_input_tree_bayescode(wildcards):
+    if config["settings"]["selectionSettings"]["foregroundLst"]:
+        return "codon_alignments/{transcript_id}/tmp/{transcript_id}_pruned_tree_bayescode.nh"
+    else:
+        return "codon_alignments/{transcript_id}/{transcript_id}_pruned_tree.nh"
+
+
+use rule convert_to_phylip from standard as speciesTree_convert_to_phylip with:
+    input:
+        get_input_ali_for_defined_tree_hyphy
+    output:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}.phy"
+    log:
+        "logs/convert_to_phylip/{transcript_id}_i_tree.log"
+
+use rule mutselomega_w0 from standard as speciesTree_mutselomega_w0 with:
+    input:
+        ali= "codon_alignments/{transcript_id}/tmp/{transcript_id}.phy",
+        tree = get_input_tree_bayescode
+    output:
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.trace"),
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.chain"),
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.param"),
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.run"),
+    params:
+        out_name = "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree"
+    log:
+        "logs/mutselomega_w0/{transcript_id}_i_tree.log"
+
+use rule mutselomega_w from standard as speciesTree_mutselomega_w with:
+    input:
+        ali= "codon_alignments/{transcript_id}/tmp/{transcript_id}.phy",
+        tree = get_input_tree_bayescode
+    output:
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.trace"),
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.chain"),
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.param"),
+        temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.run"),
+    params:
+        out_name = "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree",
+    log:
+        "logs/mutselomega_w/{transcript_id}_i_tree.log"
+
+use rule read_mutselomega_w from standard as speciesTree_read_mutselomega_w with:
+    input:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.trace",
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.chain",
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.param",
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.run",
+    output:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.ci0.025.tsv"
+    params:
+        in_name = "codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree",
+    log:
+        "logs/read_mutselomega_w/{transcript_id}_i_tree.log"
+
+use rule read_mutselomega_w0 from standard as speciesTree_read_mutselomega_w0 with:
+    input:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.trace",
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.chain",
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.param",
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.run",
+    output:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.ci0.025.tsv"
+    params:
+        in_name = "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree",
+    log:
+        "logs/read_mutselomega_w0/{transcript_id}_i_tree.log"
+
+## Extract output
+use rule extract_busted from standard as speciesTree_extract_busted with:
+    input:
+        json ="codon_alignments/{transcript_id}/{transcript_id}.busted.i_tree.json",
+    output:
+        busted_er = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.busted_er.i_tree.tsv",
+        busted_model_fit = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.busted_model.i_tree.tsv",
+        busted_tree = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.busted_tree.i_tree.nh",
+    log:
+        "logs/extract_busted/{transcript_id}_i_tree.log"
+
+use rule extract_absrel from standard as speciesTree_extract_absrel with:
+    input:
+        json ="codon_alignments/{transcript_id}/{transcript_id}.absrel_i_tree.json"
+    output:
+        absrel_tree = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.absrel_tree_i_tree.nh",
+        absrel_er = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.absrel_er_i_tree.tsv",
+    log:
+        "logs/extract_absrel/{transcript_id}_i_tree.log"
+
+use rule extract_meme from standard as speciesTree_extract_meme with:
+    input:
+        json ="codon_alignments/{transcript_id}/{transcript_id}.meme.i_tree.json",
+    output:
+        meme_mle = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.meme_mle.i_tree.tsv",
+        meme_er = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.meme_er.i_tree.tsv",
+    log:
+        "logs/extract_meme/{transcript_id}_i_tree.log"
+
+use rule extract_relax from standard as speciesTree_extract_relax with:
+    input:
+        json =expand("codon_alignments/{{transcript_id}}/tmp/{{transcript_id}}.i_tree.relax_{it}.json",
+        it=range(config["settings"]["selectionSettings"]["RELAX"]["relaxRounds"]))
+    output:
+        relax = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.relax.i_tree.tsv"
+    log:
+        "logs/extract_relax/{transcript_id}_i_tree.log"
+
+## Draw output:
+def get_activated_inputs(wildcards, step):
+    inputs = []
+
+    mapping = {"BUSTED": ["codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.busted_er.i_tree.tsv", 
+                            "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.busted_tree.i_tree.nh"],
+               "MEME":  "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.meme_mle.i_tree.tsv",
+               "ABSREL": ["codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.absrel_er_i_tree.tsv",
+               "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.absrel_tree_i_tree.nh" ],
+               "bayesCode": ["codon_alignments/{transcript_id}/tmp/{transcript_id}_classic.i_tree.ci0.025.tsv", 
+                            "codon_alignments/{transcript_id}/tmp/{transcript_id}_mutsel.i_tree.ci0.025.tsv"],
+                "RELAX": "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.relax.i_tree.tsv"}
+    
+    for feature, path in mapping.items():
+        if feature == step:
+            #print(config["settings"]["selectionSettings"].get(feature))
+            if config["settings"]["selectionSettings"].get(feature)["activate"]:
+                inputs.append(path)
+            
+    return inputs
+
+## Extract output tables from HyPhy Screens
+use rule draw_output from standard as speciesTree_draw_output with:
+    input:
+        asbrel = get_activated_inputs("{transcript_id}", "ABSREL"),
+        busted = get_activated_inputs("{transcript_id}", "BUSTED"),
+        meme_mle = get_activated_inputs("{transcript_id}", "MEME"),
+        bayescode = get_activated_inputs("{transcript_id}", "bayesCode"),
+        alignment = get_input_ali_for_defined_tree_hyphy,
+        relax_k = get_activated_inputs("{transcript_id}", "RELAX"),
+    output:
+        summary_plot = "codon_alignments/{transcript_id}/{transcript_id}.summary.pdf",
+        overview = "codon_alignments/{transcript_id}/{transcript_id}.overview.pdf"
+    log:
+        "logs/draw_output/{transcript_id}_i_tree.log"
+
+## compress all files in tmp at the end
+use rule clean_tmp from standard as speciesTree_clean_tmp with:
+    log:
+        "logs/clean_tmp/{transcript_id}_i_tree.log"
+
+use rule tar_compress from standard as speciesTree_tar_compress with:
+    log:
+        "logs/tar_compress/{transcript_id}_i_tree.log"
+
+## keep_final_alignment / selection_report / tar_results / clean_results.
+include: "rules/archive_results.smk"
+
+## bundle_transcript_logs/print_run_report (rules/common.smk) always run once
+## the whole run finishes, whether or not every transcript made it
+onsuccess:
+    if sleasy_phase() == PHASE_VALIDATE:
+        finish_validation_phase()
+    else:
+        bundle_transcript_logs()
+        print_run_report()
+
+onerror:
+    if run_was_interrupted():
+        print_interrupt_note()
+    elif sleasy_phase() == PHASE_VALIDATE:
+        finish_validation_phase()
+    else:
+        bundle_transcript_logs()
+        print_run_report()
+

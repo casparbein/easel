@@ -1,0 +1,16 @@
+executor: slurm
+jobs: 1000
+slurm-delete-logfiles-older-than: 0
+slurm-keep-successful-logs: True
+slurm-no-requeue: True
+use-conda: True
+use-apptainer: True
+restart-times: 1
+rerun-incomplete: True
+printshellcmds: True
+scheduler: greedy
+latency-wait: 120
+default-resources:
+    slurm_partition: "batch"
+    runtime: 24h
+    mem_mb: 1000

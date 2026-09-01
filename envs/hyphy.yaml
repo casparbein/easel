@@ -1,0 +1,7 @@
+name: easel_hyphy
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # error-sink / BUSTED-E needs >= 2.5.58
+  - hyphy=2.5.101

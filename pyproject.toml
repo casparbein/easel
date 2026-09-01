@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "easel"
+dynamic = ["version"]
+description = "Selection screens with HyPhy over thousands of coding sequences"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["phylogenetics", "selection", "hyphy", "snakemake", "toga"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+]
+
+# ruamel.yaml and ete4 are the only imports of the CLI itself. snakemake and
+# the SLURM plugin are runtime requirements of the workflow, not of the module,
+# but easel is useless without them.
+dependencies = [
+  "ruamel.yaml>=0.17",
+  "ete4>=4.0",
+  "snakemake>=8.0",
+  "snakemake-executor-plugin-slurm>=0.4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+# The DESCRIPTION told users to run `easel ...`; until now no such executable
+# existed anywhere in the project.
+easel = "easel.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ORG/easel"
+Issues = "https://github.com/ORG/easel/issues"
+
+[tool.setuptools]
+# Workflow files live outside the package directory and must be installed with
+# it, because cli.base_dir resolves to the parent of easel/.
+packages = ["easel"]
+
+[tool.setuptools.dynamic]
+version = { attr = "easel.__version__" }
+
+[tool.setuptools.data-files]
+"share/easel" = ["Snakefile_standard", "Snakefile_speciesTree"]
+"share/easel/rules" = ["rules/*.smk"]
+"share/easel/envs" = ["envs/*.yaml"]
+"share/easel/scripts" = ["scripts/*.py", "scripts/*.R"]
+"share/easel/prof" = ["prof/config.yaml"]

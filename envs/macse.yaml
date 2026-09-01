@@ -1,0 +1,6 @@
+name: easel_macse
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - macse=2.07

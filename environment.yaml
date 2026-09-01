@@ -1,0 +1,11 @@
+name: easel
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python >=3.12
+  - snakemake >=8.0
+  - snakemake-executor-plugin-slurm >=0.4
+  - ruamel.yaml >=0.17
+  - ete4 >=4.0
+  - graphviz

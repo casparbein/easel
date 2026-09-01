@@ -1,0 +1,6 @@
+name: easel_prank
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - prank

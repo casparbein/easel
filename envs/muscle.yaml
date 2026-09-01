@@ -1,0 +1,6 @@
+name: easel_muscle
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - muscle=5.3

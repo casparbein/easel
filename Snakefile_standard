@@ -1,0 +1,158 @@
+import re
+import shutil
+import sys
+from os import path
+from collections import defaultdict
+from pathlib import Path
+
+configfile: "DEF.yaml"
+
+## Shared parse-time helpers (read_bed_names, read_transcript_names_from_free,
+## read_gene_tree_names, write_species_list, transcript_wildcard_pattern).
+include: "rules/common.smk"
+
+## transcripts, config["fileSuffix"]/["treeSuffix"], and species.TOGA.dir.txt
+## are all resolved by rules/common.smk's resolve_run_inputs(), shared with
+## Snakefile_speciesTree.
+transcripts = resolve_run_inputs()
+
+## Split three ways from phase 1's verdicts (rules/common.smk, "Two-phase run"),
+## shared with Snakefile_speciesTree. In phase 1 and for the describe-only DAG
+## builds these are all three the full list, so nothing is filtered.
+usable, attempted, failed = resolve_verdicts(transcripts)
+
+## Suffix pair this Snakefile names its HyPhy outputs with. Read by
+## rules/archive_results.smk (selection_report) and passed to
+## analysis_output_files() below.
+ABSREL_KEYWORD = "_g_tree"
+HYPHY_KEYWORD = ".g_tree"
+
+wildcard_constraints:
+    transcript_id = transcript_wildcard_pattern(transcripts),
+
+
+## Create the desired output files
+def gather_input():
+    all_input = []
+
+    all_input.extend(expand("codon_alignments/{transcript_id}/done.txt", transcript_id = attempted))
+    all_input.extend(expand("codon_alignments/{transcript_id}/tmp.cleaned", transcript_id = attempted))
+    all_input.append("skipped_transcripts.tsv")
+    all_input.extend(expand("codon_alignments/{transcript_id}/results.cleaned", transcript_id = attempted))
+    all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa", transcript_id = attempted))
+    all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt", transcript_id = attempted))
+
+    if config["settings"]["alignmentSettings"]["doAlignmentOnly"]:
+        return all_input
+
+    ## HyPhy output for species tree
+    if config["settings"]["treeSettings"]["computeSpeciesTree"]["activate"]:
+        
+        all_input.append("spec_tree.nh"),
+        
+        all_input.extend(
+            expand("codon_alignments/{transcript_id}/{transcript_id}_iqtree.boot.nh", transcript_id=usable)
+            ),
+
+        ## `usable` explicitly. These are the only gather_* calls that reach
+        ## rule all, so they are the only place the filter has to be passed by
+        ## hand; everything else downstream is reached through
+        ## transcript_targets(), which gates on the same verdict.
+        all_input.extend(gather_absrel("_s_tree", usable)),
+        all_input.extend(gather_meme(".s_tree", usable)),
+        all_input.extend(gather_relax(".s_tree", usable)),
+        all_input.extend(gather_busted(".s_tree", usable)),
+    
+    return all_input
+
+all_input = gather_input()
+
+rule all:
+    input:
+        all_input,
+
+## Phase 1's target: `snakemake --config easel_phase=validate validated`.
+## Defined after rule all so it can never become the default target.
+rule validated:
+    input:
+        expand("codon_alignments/{transcript_id}/validation.txt",
+               transcript_id=transcripts),
+
+
+## Defined AFTER rule all so it cannot become the default target, and never
+## requested by a real run.
+rule rulegraph_reference:
+    input:
+        analysis_output_files(ABSREL_KEYWORD, HYPHY_KEYWORD),
+
+## These rules should be included based on which rules were activated in the config file
+include: "rules/codonify_alignment.smk"
+include: "rules/hmm_cleaning.smk"
+include: "rules/manual_cleaning.smk"
+include: "rules/validate_alignment.smk"
+
+## ISSUE: TOGA1 implementation still missing
+if config["togaMode"]:
+    sys.exit(
+        "ERROR: togaMode is set, but rules/extract_TOGA_alignment.smk does "
+        "not exist in this release. Use -toga2 for TOGA2 annotations, or "
+        "pass pre-computed alignments with -free."
+    )
+elif config["toga2Mode"]:
+    include: "rules/extract_TOGA2_alignment.smk"
+elif config["freeMode"] and config["settings"]["selectionSettings"]["doScreenOnly"]:
+    include: "rules/extract_free_alignment.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "prank_nt":
+    include: "rules/extract_free_alignment_prank.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "prank_codon":
+    include: "rules/extract_free_alignment_prank.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "macse2":
+    include: "rules/extract_free_alignment_macse.smk"
+elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] == "muscle":
+    include: "rules/extract_free_alignment_muscle.smk"
+
+if config["settings"]["treeSettings"]["computeGeneTrees"]["activate"]:
+    include: "rules/run_iqtree.smk"
+
+if config["settings"]["treeSettings"]["preCompGeneTrees"]["geneTreePath"] is not None:
+    include: "rules/precomp_gene_tree.smk"
+
+## Adapt?   
+if config["settings"]["selectionSettings"]["RELAX"]["activate"]:
+    include: "rules/run_relax_cp.smk"
+if config["settings"]["selectionSettings"]["ABSREL"]["activate"]:
+    include: "rules/run_absrel.smk"
+if config["settings"]["selectionSettings"]["MEME"]["activate"]:
+    include: "rules/run_meme.smk"
+if config["settings"]["selectionSettings"]["BUSTED"]["activate"]:
+    include: "rules/run_busted.smk"
+if config["settings"]["selectionSettings"]["bayesCode"]["activate"]:
+    include: "rules/run_bayescode.smk"
+    
+
+if any([config["settings"]["selectionSettings"]["ABSREL"]["activate"], 
+config["settings"]["selectionSettings"]["MEME"]["activate"],
+config["settings"]["selectionSettings"]["BUSTED"]["activate"],
+config["settings"]["selectionSettings"]["RELAX"]["activate"]]):
+    include: "rules/extract_output.smk"
+
+include: "rules/draw_output.smk"
+include: "rules/archive_results.smk"
+
+## bundle_transcript_logs/print_run_report (rules/common.smk) always run once
+## the whole run finishes, whether or not every transcript made it
+onsuccess:
+    if easel_phase() == PHASE_VALIDATE:
+        finish_validation_phase()
+    else:
+        bundle_transcript_logs()
+        print_run_report()
+
+onerror:
+    if run_was_interrupted():
+        print_interrupt_note()
+    elif easel_phase() == PHASE_VALIDATE:
+        finish_validation_phase()
+    else:
+        bundle_transcript_logs()
+        print_run_report()

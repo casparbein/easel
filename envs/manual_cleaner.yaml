@@ -1,0 +1,8 @@
+name: easel_manual_cleaner
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python >=3.10
+  - pyfastx
+  - numpy
