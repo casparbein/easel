@@ -12,7 +12,7 @@ Feel free to open a GitHub issue whenever something does not work properly
 
 ```bash
 git clone https://github.com/casparbein/eaSel.git
-cd eaSel
+cd easel
 conda env create -f environment.yaml
 conda activate easel
 pip install -e .
