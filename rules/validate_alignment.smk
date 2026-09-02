@@ -32,6 +32,7 @@ rule validate_alignment:
             0,
         ),
         foreground = config["settings"]["selectionSettings"]["foregroundLst"] or [],
+    threads: 1,
     resources:
         runtime = "10m",
     group: "align_clean"

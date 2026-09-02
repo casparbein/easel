@@ -5,6 +5,7 @@ rule extract_ali:
     output:
         out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa",
     group: "align_clean"
+    threads: 1,
     resources:
         runtime = "5m",
     log:
