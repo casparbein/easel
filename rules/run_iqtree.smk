@@ -28,6 +28,8 @@ rule compute_tree:
         --mem {resources.mem_mb}M \
         -T {threads} \
         -blmin 0.001 \
+        -mset MG,MGK \
+        -nstop 50 \
         >> {log} 2>&1
         """
 
