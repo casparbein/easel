@@ -41,6 +41,10 @@ def gather_input():
     all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa", transcript_id = attempted))
     all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt", transcript_id = attempted))
 
+    if WANT_CLEANING_REPORT:
+        all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
+                                transcript_id = attempted))
+
     return all_input
 
 all_input = gather_input()
@@ -55,6 +59,8 @@ rule all:
 rule validated:
     input:
         expand("codon_alignments/{transcript_id}/validation.txt",
+               transcript_id=transcripts),
+         expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
                transcript_id=transcripts),
 
 

@@ -45,6 +45,10 @@ def gather_input():
     if config["settings"]["alignmentSettings"]["doAlignmentOnly"]:
         return all_input
 
+    if WANT_CLEANING_REPORT:
+        all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
+                                transcript_id = attempted))
+
     ## HyPhy output for species tree
     if config["settings"]["treeSettings"]["computeSpeciesTree"]["activate"]:
         
@@ -76,6 +80,8 @@ rule all:
 rule validated:
     input:
         expand("codon_alignments/{transcript_id}/validation.txt",
+               transcript_id=transcripts),
+         expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
                transcript_id=transcripts),
 
 

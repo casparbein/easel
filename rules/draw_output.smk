@@ -46,7 +46,8 @@ rule draw_output:
 rule tar_compress:
     input:
         done = "codon_alignments/{transcript_id}/done.txt",
-        cleaning = "codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
+        cleaning = (lambda w: f"codon_alignments/{w.transcript_id}/{w.transcript_id}.cleaning.txt"
+                    if WANT_CLEANING_REPORT else []),
     output:
         archive = "codon_alignments/{transcript_id}/tmp.tar.gz",
     params:

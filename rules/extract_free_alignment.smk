@@ -4,7 +4,7 @@ rule extract_ali:
         in_fasta = f"{config['fastaPath']}{{transcript_id}}{config['fileSuffix']}"
     output:
         out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa",
-    group: "align_clean"
+    localrule: True,
     threads: 1,
     resources:
         runtime = "5m",

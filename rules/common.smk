@@ -366,6 +366,23 @@ def read_verdict(path):
         return None, f"unusable verdict {verdict[:40]!r} in {path}"
     return verdict, reason
 
+def cleaning_transitions():
+    """The cleaning stages this configuration actually applies.
+    If only a selection screen should be done, cleaning is not performed 
+    and a cleaning report unnecessary
+    """
+    cln = config["settings"]["cleaningSettings"]
+    stages = []
+    if config["settings"]["alignmentSettings"]["aligner"] in CODONIFYING_ALIGNERS:
+        stages.append("codonify")
+    if cln["hmmCleaning"]["doHMMCleaning"]:
+        stages.append("hmm")
+    if cln["manualCleaning"]["doManualCleaning"]:
+        stages.append("manual")
+    return stages
+
+WANT_CLEANING_REPORT = bool(cleaning_transitions())
+
 
 def write_verdict_summary(transcript_ids):
     """Tally every transcript's verdict into VERDICT_SUMMARY. Returns counts.
