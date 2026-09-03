@@ -337,7 +337,7 @@ include: "rules/archive_results.smk"
 ## bundle_transcript_logs/print_run_report (rules/common.smk) always run once
 ## the whole run finishes, whether or not every transcript made it
 onsuccess:
-    if sleasy_phase() == PHASE_VALIDATE:
+    if easel_phase() == PHASE_VALIDATE:
         finish_validation_phase()
     else:
         bundle_transcript_logs()
@@ -346,7 +346,7 @@ onsuccess:
 onerror:
     if run_was_interrupted():
         print_interrupt_note()
-    elif sleasy_phase() == PHASE_VALIDATE:
+    elif easel_phase() == PHASE_VALIDATE:
         finish_validation_phase()
     else:
         bundle_transcript_logs()
