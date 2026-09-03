@@ -321,7 +321,7 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
         print(f"Error reading {json_path}: {e}", file=sys.stderr)
         sys.exit(1)
 
-    for key in ["Evidence Ratios", "Site Log Likelihood"]
+    for key in ["Evidence Ratios", "Site Log Likelihood"]:
         if key not in data:
             print(f"Error: Missing required key '{key}' in {json_path}", file=sys.stderr)
             sys.exit(1)
