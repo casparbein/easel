@@ -70,7 +70,9 @@ def read_fasta(filepath):
 def main():
     in_alignment = snakemake.input[0]
     out_alignment = snakemake.output[0]
+    logfile = snakemake.log[0]
     logging.basicConfig(
+        filename=logfile,
         filemode="w",
         level=logging.DEBUG,
         format="[%(levelname)s] %(message)s",

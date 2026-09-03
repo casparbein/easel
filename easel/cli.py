@@ -499,7 +499,7 @@ def selection_parser():
 
     add_resource("extract_alignments", 1, 10000, "alignment extraction")
     add_resource("hmmcleaner", 1, 1000, "HmmCleaner")
-    add_resource("manualcleaner", 1, 1000, "the manual cleaner")
+    add_resource("manualcleaner", 1, 1000, "manual cleaner")
     add_resource("tree_comp", 4, 15000, "tree computation")
     add_resource("prank", 5, 5000, "PRANK")
     add_resource("absrel", 5, 10000, "aBSREL")
@@ -1212,7 +1212,8 @@ def main():
             "cleaningSettings": {
                 "manualCleaning": {
                   "doManualCleaning": args.doManualCleaning,
-                  "manualCleanerRef": "REFERENCE", ## ISSUE: must be adapted, SingleQuotedScalarString(alignment_reference), 
+                  ## Currently not necessary
+                  #"manualCleanerRef": SingleQuotedScalarString(alignment_reference) if alignment_reference else None
                   "manualCleanerParams": {
                     "mincodon": parse_manual_cleaner_params(args.manual_cleaner_params,  "mc"),
                     "minseq": parse_manual_cleaner_params(args.manual_cleaner_params, "ms"), 
