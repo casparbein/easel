@@ -87,8 +87,7 @@ rule extract_relax:
     group: "relax_post"
     log:
         "logs/extract_relax/{transcript_id}.log"
-    threads:
-        config["resources"]["busted"]["threads"]
+    threads: 1,
     resources:
         runtime = "15m",
         mem_mb = config["resources"]["busted"]["mem_mb"]
