@@ -321,15 +321,17 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
         print(f"Error reading {json_path}: {e}", file=sys.stderr)
         sys.exit(1)
 
-    for key in ["Evidence Ratios", "Site Log Likelihood", "Synonymous site-posteriors"]:
+    for key in ["Evidence Ratios", "Site Log Likelihood"]
         if key not in data:
             print(f"Error: Missing required key '{key}' in {json_path}", file=sys.stderr)
             sys.exit(1)
 
+    if ["Synonymous site-posteriors"] in data:
+        syn_posteriors = data["Synonymous site-posteriors"]
+
     ev_ratios      = data["Evidence Ratios"]
     site_logl      = data["Site Log Likelihood"]
-    syn_posteriors = data["Synonymous site-posteriors"]
-    #syn_rates      = data["fits"]["Unconstrained model"]["Rate Distributions"]["Synonymous site-to-site rates"]
+    
 
     def _unwrap(arr):
         """Return the flat list, unwrapping a one-element outer list if present."""
@@ -372,8 +374,10 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
         "Site LogL Optimized Null",
         "Site LogL Unconstrained"
     ]
-    for i in range(num_syn_classes):
-        headers.append(f"Synonymous Site Posterior {i + 1}")
+
+    if num_syn_classes:
+        for i in range(num_syn_classes):
+            headers.append(f"Synonymous Site Posterior {i + 1}")
 
     def _val(arr, i):
         """Safely retrieve site i from arr; return '' if arr is None."""
@@ -395,9 +399,10 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
                     _val(logl_optimized_null, i),
                     _val(logl_unconstrained,  i),
                 ]
-                for j in range(num_syn_classes):
-                    syn_val = syn_posteriors[j][i]
-                    row.append(syn_val[0] if isinstance(syn_val, list) else syn_val)
+                if num_syn_classes:
+                    for j in range(num_syn_classes):
+                        syn_val = syn_posteriors[j][i]
+                        row.append(syn_val[0] if isinstance(syn_val, list) else syn_val)
                 writer.writerow(row)
         print(f"Successfully extracted BUSTED data from {os.path.basename(json_path)} to {os.path.basename(csv_path)}")
     except Exception as e:
