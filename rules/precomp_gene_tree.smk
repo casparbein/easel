@@ -1,3 +1,5 @@
+import os
+
 ## Directory of precomputed gene trees, hoisted so the rule bodies below stay
 ## readable and parse on Python < 3.12 (nested same-quote f-strings are 3.12+).
 GENE_TREE_DIR = config["settings"]["treeSettings"]["preCompGeneTrees"]["geneTreePath"]
@@ -18,7 +20,7 @@ def extract_names_from_fasta(fasta):
 ## Copy gene trees
 rule copy_precomp_gene_tree:
     input:
-        in_tree = f"{GENE_TREE_DIR}{{transcript_id}}{config['treeSuffix']}",
+        in_tree = os.path.join(GENE_TREE_DIR, "{transcript_id}" + config["treeSuffix"]),
         ali=get_input_for_busted,
     output:
         out_tree = "codon_alignments/{transcript_id}/{transcript_id}_pruned_tree.nh"
