@@ -58,9 +58,9 @@ rule validated:
                transcript_id=transcripts),
         expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
                transcript_id=transcripts),
-        if WANT_CLEANING_REPORT:
-        all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
-                                transcript_id = attempted)),
+        (expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
+                        transcript_id=transcripts)
+                if WANT_CLEANING_REPORT else []),
 
 
 ## Defined AFTER rule all so it cannot become the default target, and never
