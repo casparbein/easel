@@ -365,6 +365,8 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
 
     if syn_posteriors:
         num_syn_classes = len(syn_posteriors)
+    else:
+        num_syn_classes = None
 
     if num_sites == 0:
         print(f"Error: Could not determine number of sites from {json_path}", file=sys.stderr)
