@@ -383,7 +383,6 @@ def cleaning_transitions():
 
 WANT_CLEANING_REPORT = bool(cleaning_transitions())
 
-
 def write_verdict_summary(transcript_ids):
     """Tally every transcript's verdict into VERDICT_SUMMARY. Returns counts.
 
