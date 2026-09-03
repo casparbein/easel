@@ -343,8 +343,25 @@ def _check_trees(args, r: Resolved):
                 r.warnings.append(
                     "no assemblies given, but a species input tree was provided")
 
+        ## gene trees/species tree versus fasta            
+        if r.mode == "free" and r.fasta_path and os.path.isdir(r.fasta_path):
+                _report_pair(
+                    formats.check_headers_against_tree(
+                        r.fasta_path,
+                        (leaf.name for leaf in tree.leaves()),
+                        tree_label=f"the input tree ({args.input_tree})",
+                        reference=r.alignment_reference),
+                    r)
+
     if args.input_gene_trees and os.path.isdir(args.input_gene_trees):
-        _report_pair(formats.validate_tree_directory(args.input_gene_trees), r)
+        fasta_dir = (r.fasta_path
+                    if r.mode == "free" and r.fasta_path
+                    and os.path.isdir(r.fasta_path) else None)
+        _report_pair(
+            formats.validate_tree_directory(args.input_gene_trees,
+                                            fasta_dir=fasta_dir,
+                                            reference=r.alignment_reference),
+            r)
 
 
 def _check_stages(args, r: Resolved):

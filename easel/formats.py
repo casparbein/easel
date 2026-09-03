@@ -102,6 +102,129 @@ def check_toga_run_dirs(toga_path, assemblies):
 ## Trees
 ## ---------------------------------------------------------------------------
 
+def read_fasta_headers(path):
+    """Sequence identifiers in a FASTA file: each header up to the first space.
+
+    The whole file is read -- headers are interleaved with sequence, not
+    grouped at the top -- so this is the expensive half of the checks below.
+    """
+    names = []
+    with open(path, "r", encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            if line.startswith(">"):
+                parts = line[1:].split()
+                if parts:
+                    names.append(parts[0])
+    return names
+
+
+def _strip_extension(name, extensions):
+    """*name* without a trailing (optionally .gz'd) extension from the set."""
+    if name.endswith(".gz"):
+        name = name[:-3]
+    for ext in sorted(extensions, key=len, reverse=True):
+        if name.endswith(ext):
+            return name[: -len(ext)]
+    return name
+
+
+def fasta_stems(fasta_dir, extensions=None):
+    """{transcript stem: path} for the FASTA files in a directory."""
+    extensions = extensions or FASTA_EXTENSIONS
+    out = {}
+    for path in sorted(Path(fasta_dir).iterdir()):
+        if not path.is_file() or path.name.startswith("."):
+            continue
+        name = path.name[:-3] if path.name.endswith(".gz") else path.name
+        if any(name.endswith(ext) for ext in extensions):
+            out[_strip_extension(path.name, extensions)] = path
+    return out
+
+
+def compare_tree_headers(tips, headers, tree_label="the tree", reference=None):
+    """Check that every FASTA header is a tip in the tree. Returns (ok, message).
+
+    The direction is deliberately asymmetric:
+
+      headers - tips   FATAL. The pipeline prunes each tree to its alignment's
+                       taxa (prune_tips in scripts/newick_tree_manipulator.py),
+                       and ete4 raises on a label that is not a tip -- so the
+                       run dies in phase 2 with a message naming neither the
+                       header nor the tree.
+      tips - headers   NORMAL, not reported. Pruning a tree that covers more
+                       species than one transcript is the entire point;
+                       compare_tree_asm() already warns where that matters.
+    """
+    tips = set(tips)
+    headers = set(headers)
+    if reference:
+        ## Renamed to REFERENCE inside the pipeline, but a normal tip in the
+        ## input tree, so it is covered either way.
+        headers = headers - {reference}
+    absent = sorted(headers - tips)
+    if not absent:
+        return True, "{} covers all {} sequence header(s)".format(
+            tree_label, len(headers))
+    shown = ", ".join(absent[:5])
+    if len(absent) > 5:
+        shown += " ..."
+    return False, ("{} sequence header(s) absent from {}: {}".format(
+        len(absent), tree_label, shown))
+
+
+def check_headers_against_tree(fasta_dir, tips, tree_label="the input tree",
+                               reference=None, extensions=None, max_files=None):
+    """Every header in every alignment must be a tip in one shared tree.
+
+    Reports which alignments failed rather than a bare count: a naming
+    mismatch shows up as every alignment failing on the same names, and that
+    is a different fix from one transcript carrying one stray taxon.
+    """
+    stems = fasta_stems(fasta_dir, extensions)
+    if not stems:
+        return True, "no FASTA files under {} to check against {}".format(
+            fasta_dir, tree_label)
+    paths = list(stems.values())
+    if max_files:
+        paths = paths[:max_files]
+
+    tips = set(tips)
+    offenders, all_missing = [], set()
+    for path in paths:
+        headers = set(read_fasta_headers(path))
+        if reference:
+            headers = headers - {reference}
+        missing = headers - tips
+        if missing:
+            offenders.append((path.name, sorted(missing)))
+            all_missing |= missing
+
+    if not offenders:
+        return True, "{} covers the headers of all {} alignment(s)".format(
+            tree_label, len(paths))
+    return False, _coverage_message(offenders, all_missing, len(paths), tree_label)
+
+
+def _coverage_message(offenders, all_missing, n_files, tree_label):
+    """Shared wording for the two coverage checks."""
+    shown = ", ".join(sorted(all_missing)[:6])
+    if len(all_missing) > 6:
+        shown += " ..."
+    detail = "; ".join("{} ({})".format(name, ", ".join(miss[:3]))
+                       for name, miss in offenders[:3])
+    if len(offenders) > 3:
+        detail += "; and {} more".format(len(offenders) - 3)
+    systematic = ""
+    if len(offenders) == n_files and n_files > 1:
+        systematic = (" Every alignment is affected, which points at a naming "
+                      "convention rather than at individual transcripts.")
+    return ("{} of {} alignment(s) contain sequence headers absent from {}. "
+            "Missing tip(s): {}.{} First offenders: {}. Every header must be a "
+            "tip in the tree its alignment is screened against, or the run "
+            "fails when that tree is pruned to the alignment.".format(
+                len(offenders), n_files, tree_label, shown, systematic, detail))
+
+
 def read_in_tree(tree_path, min_tips=3):
     """Parse a Newick file and return the ete4 Tree."""
     if not os.path.isfile(tree_path):
@@ -153,6 +276,25 @@ def compare_tree_asm(in_tree, assembly_list, reference=None):
                        f"the screen must be a tip in the tree.")
     return True, f"Input tree covers all {len(expected)} expected taxa"
 
+
+def _match_stem(tree_name, tree_extensions, wanted):
+    """Which alignment stem this tree file belongs to, or None.
+
+    Prefers the exact stem, then the longest prefix of the file name that is an
+    alignment stem -- so <id>.nh and <id>_iqtree.nh both pair with <id>. Tests
+    prefixes of the tree name against the stem set rather than scanning the
+    stems, which is O(name length) instead of O(alignments); the same trick,
+    for the same reason, as read_gene_tree_names() in rules/common.smk.
+    """
+    stem = _strip_extension(tree_name, tree_extensions)
+    if stem in wanted:
+        return stem
+    for i in range(len(tree_name) - 1, 0, -1):
+        if tree_name[:i] in wanted:
+            return tree_name[:i]
+    return None
+
+
 ## This extends tree format checks for precomputed gene trees
 def validate_tree_directory(input_dir, extensions=None):
     """Every tree file in *input_dir* must parse. Returns (ok, message)."""
@@ -171,10 +313,24 @@ def validate_tree_directory(input_dir, extensions=None):
         try:
             ## Maybe use read_in_tree and compare_tree_asm here (?)
             with open(path, "r", encoding="utf-8") as handle:
-                _tree_class()(handle, parser=1)
+                tmp_tree = _tree_class()(handle, parser=1)
         except Exception as exc:
             return False, f"{path} is not readable as Newick: {exc}"
         checked += 1
+        
+        if wanted:
+            stem = _match_stem(path.name, extensions, wanted)
+            if stem is None:
+                continue
+            paired.add(stem)
+            tips = {leaf.name for leaf in tmp_tree.leaves()}
+            headers = set(read_fasta_headers(wanted[stem]))
+            if reference:
+                headers = headers - {reference}
+            missing = headers - tips
+            if missing:
+                offenders.append((wanted[stem].name, sorted(missing)))
+                all_missing |= missing
 
     if skipped:
         logger.warning("Ignored %d non-tree file(s) in %s: %s%s", len(skipped),
@@ -182,7 +338,26 @@ def validate_tree_directory(input_dir, extensions=None):
                        " ..." if len(skipped) > 5 else "")
     if not checked:
         return False, f"No tree files with a recognised extension in '{input_dir}'."
-    return True, f"All {checked} tree files in '{input_dir}' parsed successfully."
+    
+    problems = []
+    if wanted:
+        unpaired = sorted(set(wanted) - paired)
+        if unpaired:
+            shown = ", ".join(unpaired[:5]) + (" ..." if len(unpaired) > 5 else "")
+            problems.append(
+                f"{len(unpaired)} of {len(wanted)} alignment(s) have no matching "
+                f"tree in '{input_dir}': {shown}")
+        if offenders:
+            problems.append(_coverage_message(
+                offenders, all_missing, len(wanted), "their own gene tree"))
+    if problems:
+        return False, ". ".join(problems) + "."
+
+    covered = (f"; all {len(wanted)} alignment(s) are covered by their own tree"
+               if wanted else "")
+    return True, (f"All {checked} tree files in '{input_dir}' parsed "
+                  f"successfully{covered}.")
+
 
 
 ## ---------------------------------------------------------------------------
