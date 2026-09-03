@@ -305,6 +305,10 @@ def validate_tree_directory(input_dir, extensions=None, fasta_dir=None,
     if not files:
         return False, f"Directory '{input_dir}' contains no files."
 
+    wanted = fasta_stems(fasta_dir, fasta_extensions) if fasta_dir else {}
+    paired = set()
+    offenders, all_missing = [], set()
+
     checked, skipped = 0, []
     for path in files:
         name = path.name[:-3] if path.name.endswith(".gz") else path.name
