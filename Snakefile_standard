@@ -69,7 +69,7 @@ all_input = gather_input()
 
 rule all:
     input:
-        skip_on_import(all_input),
+        skip_on_import(gather_input),
 
 ## Phase 1's target: `snakemake --config easel_phase=validate validated`.
 ## Defined after rule all so it can never become the default target.

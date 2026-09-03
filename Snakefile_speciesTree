@@ -48,7 +48,7 @@ all_input = gather_input()
 # Define a new default target 
 rule all:
     input:
-        skip_on_import(all_input),
+        skip_on_import(gather_input),
 
 
 ## Phase 1's target: `snakemake --config sleasy_phase=validate validated`.
