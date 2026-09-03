@@ -326,7 +326,7 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
             print(f"Error: Missing required key '{key}' in {json_path}", file=sys.stderr)
             sys.exit(1)
 
-    if ["Synonymous site-posteriors"] in data:
+    if "Synonymous site-posteriors" in data:
         syn_posteriors = data["Synonymous site-posteriors"]
 
     ev_ratios      = data["Evidence Ratios"]
