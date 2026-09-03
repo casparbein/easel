@@ -297,7 +297,7 @@ def _match_stem(tree_name, tree_extensions, wanted):
 
 ## This extends tree format checks for precomputed gene trees
 def validate_tree_directory(input_dir, extensions=None, fasta_dir=None,
-+                            reference=None, fasta_extensions=None):
+                               reference=None, fasta_extensions=None):
     """Every tree file in *input_dir* must parse. Returns (ok, message)."""
     extensions = extensions or TREE_EXTENSIONS
     files = [p for p in sorted(Path(input_dir).iterdir())
