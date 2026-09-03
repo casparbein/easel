@@ -464,7 +464,7 @@ lines <- c(
   "",
   sprintf("Reference grid: %s, %d cells", grid_name, cells),
   "",
-  "Per stage. Codonify can drop individual columns after masking (if only N or - are retained in that column),"
+  "Per stage. Codonify can drop individual columns after masking (if only N or - are retained in that column),",
   "HmmCleaner masks individual nucleotides; only",
   "Manual cleaner routinely drops whole sequences or columns; masked cells are either not allowed (AC-) or stop codons (TGA).",
   strrep("-", 66)
