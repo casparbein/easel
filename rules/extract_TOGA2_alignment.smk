@@ -34,7 +34,7 @@ rule extract_ali:
               --input_dirs {input.spec_names} \
               --transcript_id {params.transcript_id} \
               {params.additional} \
-              $SEED_FLAG \
+              --seed {params.seed} \
               --tmp_dir {params.tmp_dir} \
               -o {output.codon_ali} \
               >> {log} 2>&1
