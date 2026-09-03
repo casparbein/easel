@@ -40,7 +40,7 @@ rule aggregate_relax:
         it=range(config["settings"]["selectionSettings"]["RELAX"]["relaxRounds"]))
     output:
         "codon_alignments/{transcript_id}/{transcript_id}.g_tree.relax.aggregated.json"
-    group: "relax_stack"
+    group: "relax_post"
     resources:
         runtime = "5m",
     log:

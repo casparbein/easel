@@ -84,7 +84,7 @@ rule extract_relax:
         relax = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.relax.g_tree.tsv"
     params:
         script = f"{workflow.basedir}/scripts/extract_hyphy.py",
-    group: "relax_stack"
+    group: "relax_post"
     log:
         "logs/extract_relax/{transcript_id}.log"
     threads:
