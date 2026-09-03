@@ -103,6 +103,8 @@ elif config["freeMode"] and config["settings"]["alignmentSettings"]["aligner"] =
 module standard:
     snakefile:
         "Snakefile_standard"
+    config:
+        config
 
 ## Run hyphy on species tree. Do this if species tree calculation is turned on in DEF.yaml: config['settings']['computeTree']['species_tree] == true
 def get_input_ali_for_defined_tree_hyphy(wildcards):
