@@ -54,3 +54,38 @@ rule gene_tree_annotation:
         "../scripts/newick_tree_manipulator.py"
 
 
+## The tree including all species that one wants to analyse has to be created at the beginning as one of the input files.
+## Here, the tree is pruned so only leaves that have representation in the alignment are left
+def extract_names_from_fasta(fasta):
+    tmp_list = []
+    with open(fasta, 'r') as fas:
+        for line in fas:
+            if line.startswith('>'):
+                tmp_list.append(line.strip('>').strip('\n'))
+    if len(tmp_list) > 0:
+        return(",".join(tmp_list))
+    else:
+        return ""
+
+rule draw_tree_bayescode_ct:
+    input: 
+        in_tree = "codon_alignments/{transcript_id}/tmp/{transcript_id}_tmp.treefile",
+        ali=get_input_for_busted,
+    output:
+        ans_tree = "codon_alignments/{transcript_id}/tmp/{transcript_id}_pruned_tree_bayescode.nh"
+    params:
+        label_nodes = None,
+        keep = lambda wildcards, input: extract_names_from_fasta(input.ali)
+    resources:
+        runtime = "10m",
+        mem_mb = config["resources"]["extractAlignments"]["mem_mb"]
+    threads: config["resources"]["extractAlignments"]["threads"]
+    group: "tree_prune"
+    log:
+        "logs/draw_tree_bayescode/{transcript_id}.log"
+    conda:
+        "../envs/newick_tree_manipulator.yaml"
+    script:
+        "../scripts/newick_tree_manipulator.py"
+
+

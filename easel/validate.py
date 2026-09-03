@@ -29,8 +29,8 @@ CODON_AWARE_ALIGNERS = {"macse2", "prank_codon"}
 ## (Snakefile_standard include block).
 ## ISSUE: TOGA2 should be able to also run macse2/prank_codon
 ALIGNERS_BY_MODE = {
-    "toga":  {"prank", "muscle"},
-    "toga2": {"prank", "muscle"},
+    "toga":  {"prank", "muscle", "macse2"},
+    "toga2": {"prank", "muscle", "macse2"},
     "free":  {"prank_nt", "prank_codon", "macse2", "muscle"},
 }
 
@@ -322,12 +322,12 @@ def _check_trees(args, r: Resolved):
     if chosen and args.doAlignmentOnly:
         r.warnings.append(f"--do_alignment_only: the {chosen[0]} tree source "
                           f"will not be used")
-    ## ISSUE: This has to be tested/fixed
-    if args.bayescode and args.foreground_lst and r.tree_strategy == "precomputed":
-        r.errors.append(
-            "--bayescode with --foreground_list and --input_gene_trees requests "
-            "tmp/<id>_tmp.treefile, which only rule compute_tree produces (-ct). "
-            "Use -ct, or drop --foreground_list for the BayesCode run.")
+    # ## ISSUE: This has to be tested/fixed
+    # if args.bayescode and args.foreground_lst and r.tree_strategy == "precomputed":
+    #     r.errors.append(
+    #         "--bayescode with --foreground_list and --input_gene_trees requests "
+    #         "tmp/<id>_tmp.treefile, which only rule compute_tree produces (-ct). "
+    #         "Use -ct, or drop --foreground_list for the BayesCode run.")
 
     if args.input_tree and os.path.isfile(args.input_tree):
         try:

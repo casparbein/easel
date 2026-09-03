@@ -1,9 +1,7 @@
 ## Run bayescode, as per https://www.pnas.org/doi/10.1073/pnas.2214977120#sec-1
 
 def get_input_tree_bayescode(wildcards):
-    if config["settings"]["selectionSettings"]["foregroundLst"]:
-        return "codon_alignments/{transcript_id}/tmp/{transcript_id}_tmp.treefile"
-    elif config["settings"]["treeSettings"]["preCompGeneTrees"]["geneTreePath"]:
+    if config["settings"]["selectionSettings"]["foregroundLst"] or config["settings"]["treeSettings"]["preCompGeneTrees"]["geneTreePath"]:
         return "codon_alignments/{transcript_id}/tmp/{transcript_id}_pruned_tree_bayescode.nh"
     else:
         return "codon_alignments/{transcript_id}/{transcript_id}_iqtree.nh"
