@@ -40,7 +40,7 @@ rule copy_precomp_gene_tree:
 ## For Bayescode
 rule precomp_tree_bayescode:
     input: 
-        in_tree = f"{GENE_TREE_DIR}{{transcript_id}}{config['treeSuffix']}",
+        in_tree = os.path.join(GENE_TREE_DIR, "{transcript_id}" + config["treeSuffix"]),
         ali=get_input_for_busted,
     output:
         ans_tree = "codon_alignments/{transcript_id}/tmp/{transcript_id}_pruned_tree_bayescode.nh"
