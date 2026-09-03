@@ -328,6 +328,8 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
 
     if "Synonymous site-posteriors" in data:
         syn_posteriors = data["Synonymous site-posteriors"]
+    else:
+        syn_posteriors = None
 
     ev_ratios      = data["Evidence Ratios"]
     site_logl      = data["Site Log Likelihood"]
@@ -360,7 +362,9 @@ def extract_busted_to_csv(json_path: str, csv_path: str):
         (len(a) for a in [constrained_er, optimized_null_er, logl_unconstrained] if a is not None),
         0,
     )
-    num_syn_classes = len(syn_posteriors)
+
+    if syn_posteriors:
+        num_syn_classes = len(syn_posteriors)
 
     if num_sites == 0:
         print(f"Error: Could not determine number of sites from {json_path}", file=sys.stderr)
