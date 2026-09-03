@@ -1202,8 +1202,8 @@ def main():
                 "aligner": SingleQuotedScalarString(args.aligner) if args.aligner is not None else None,
                 "fromTOGA": {
                   #"includeLostTranscripts": args.includeLostTranscripts, can be removed since it can be adapted in the below step
-                  "twoBitPath": SingleQuotedScalarString(args.twoBitPath) if args.twoBitPath else None,
-                  "toga2Activate": SingleQuotedScalarString(args.toga2Activate) if args.toga2Activate else None,
+                  "twoBitPath": SingleQuotedScalarString(os.path.abspath(args.twoBitPath)) if args.twoBitPath else None,
+                  "toga2Activate": SingleQuotedScalarString(os.path.abspath(args.toga2Activate)) if args.toga2Activate else None,
                   "extractAliParams": SingleQuotedScalarString(parse_parameter_lists(args.extract_ali_params, program_name="extract")),
                   #"maxCDSLengthReference": args.maxCDSLengthReference  IMPORTANT: Will be part of preprocess script
                 },
