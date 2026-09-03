@@ -172,6 +172,14 @@ def transcript_wildcard_pattern(transcripts):
         )
     return "[^/]+"
 
+## For module imports
+def imported_as_module():
+    """True when this file is being re-executed for a `use rule` import."""
+    return getattr(workflow.modifier, "rule_whitelist", None) is not None
+
+def skip_on_import(build):
+    """build() on a real run; [] in an import pass, where it is discarded."""
+    return [] if imported_as_module() else build()
 
 ## ---------------------------------------------------------------------------
 ## Parse-time run setup, shared by both Snakefiles

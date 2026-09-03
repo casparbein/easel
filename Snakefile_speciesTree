@@ -48,19 +48,20 @@ all_input = gather_input()
 # Define a new default target 
 rule all:
     input:
-        all_input,
+        skip_on_import(all_input),
+
 
 ## Phase 1's target: `snakemake --config sleasy_phase=validate validated`.
 ## Defined after rule all so it can never become the default target.
 rule validated:
     input:
-        expand("codon_alignments/{transcript_id}/validation.txt",
-               transcript_id=transcripts),
-        expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
-               transcript_id=transcripts),
-        (expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
-                        transcript_id=transcripts)
-                if WANT_CLEANING_REPORT else []),
+        skip_on_import(lambda: expand(
+            "codon_alignments/{transcript_id}/validation.txt",
+            transcript_id=transcripts)),
+        skip_on_import(lambda: expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
+               transcript_id=transcripts)),
+        skip_on_import(lambda: expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
+            transcript_id=transcripts) if WANT_CLEANING_REPORT else []),
 
 
 ## Defined AFTER rule all so it cannot become the default target, and never
@@ -68,7 +69,7 @@ rule validated:
 ## rulegraph_reference` renders the whole workflow.
 rule rulegraph_reference:
     input:
-        analysis_output_files(ABSREL_KEYWORD, HYPHY_KEYWORD),
+        skip_on_import(lambda: analysis_output_files(ABSREL_KEYWORD, HYPHY_KEYWORD)),
 
 ## These rules should be included based on which rules were activated in the config file
 include: "rules/codonify_alignment.smk"
