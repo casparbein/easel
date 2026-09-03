@@ -659,8 +659,9 @@ def analysis_output_files(absrel_keyword, hyphy_keyword):
                      transcript_id=transcripts)
             + expand("codon_alignments/{transcript_id}/validation.txt",
                      transcript_id=transcripts)
-            + expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
-                     transcript_id=transcripts)
+            + (expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
+                        transcript_id=transcripts)
+                 if WANT_CLEANING_REPORT else [])
             + expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
                      transcript_id=transcripts))
 
