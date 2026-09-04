@@ -8,6 +8,7 @@ transcripts.
 Feel free to open a GitHub issue whenever something does not work properly
 
 ## Requirements
+
 While easel has a `--local` mode, it's best used on an HPC. \
 Currently, easel requires the slurm scheduling system and mamba or conda (see "Install").
 
@@ -61,22 +62,23 @@ Alternatively, you can pass your own `my_config.yaml` file to easel, but it has 
 
 ## Quick start
 
-Easel has two modes: `-toga2` and `-free`. It can be seamlessly run with [TOGA2](https://github.com/hillerlab/TOGA2) output like this
-(with TOGA2 runs living in /path/to/genomes/hg38/TOGA2):
-```bash
-# TOGA2 annotations, fixed species tree, aBSREL with synonymous rate variation
-easel -toga2 /path/to/genomes/hg38/TOGA2 \
-       -asm assemblies.txt \
-       -sb selected.bed \
-       --twoBit_path hg38.exons.2bit \
-       --reference_name hg38
-       -it species_tree.nh \
-       -a prank \
-       -ab srv \
-       -rs
-```
+> **Under development:** 
+> Easel has two modes: `-toga2` and `-free`. It can be seamlessly run with [TOGA2](https://github.com/hillerlab/TOGA2) output like this
+> (with TOGA2 runs living in /path/to/genomes/hg38/TOGA2):
+>```bash
+># TOGA2 annotations, fixed species tree, aBSREL with synonymous rate variation
+>easel -toga2 /path/to/genomes/hg38/TOGA2 \
+>       -asm assemblies.txt \
+>       -sb selected.bed \
+>       --twoBit_path hg38.exons.2bit \
+>       --reference_name hg38
+>       -it species_tree.nh \
+>       -a prank \
+>       -ab srv \
+>       -rs
+>```
 
-'Free' means that you can pass your own unaligned or pre-aligned fasta files,
+In Free Mode, you can pass your own unaligned or pre-aligned fasta files,
 living in my_transcripts/. 
 ```bash
 # your own FASTA files, per-gene trees, BUSTED with error-sink
@@ -91,6 +93,22 @@ easel -free my_transcripts/ \
 Nothing runs unless you pass `-dr` (dry run) or `-rs`. Without either, easel
 writes `DEF.yaml` and stops.
 
+Since snakemake manages job submissions, easel is mostly intended to run on an HPC login node, through a **screen session** (Given that runs can take between minutes and several hours). Set it up like this:
+
+```bash
+screen -S easel_run
+```
+
+detaching from a running screen can be done with Ctrl + A + D, and reattaching works like this: 
+
+```bash
+screen -r easel_run ## if a screen with the name easel_run exists
+```
+
+> **Untested for remote submission:** 
+Potentially, easel jobs can also be submitted to another node through `sbatch`, although there might arise conflicts for where snakemake will submit easel-spawned jobs, and sometimes remote nodes do not have internet access, leading to failed conda downloads and other cryptic errors.
+
+
 ## Test data
 TBC
 
@@ -99,3 +117,7 @@ TBC
 
 ## Tools used by easel
 TBC
+
+## Known issues
+easel's [TOGA2](https://github.com/hillerlab/TOGA2) mode is still under development and not yet functional.
+
