@@ -79,11 +79,11 @@ rule convert_conf:
         runtime = "5min",
     group:  "align_clean"
     shell:
-    """
-    cat {input} \
-    | tr '_.,/:=@*^' '123456789' \
-    > {output}
-    """
+        """
+        cat {input} \
+        | tr '_.,/:=@*^' '123456789' \
+        > {output}
+        """
 
 rule filter_muscle_confidence:
     input:
