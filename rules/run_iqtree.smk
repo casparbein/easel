@@ -30,6 +30,7 @@ rule compute_tree:
         -blmin 0.001 \
         -mset MG,MGK \
         -nstop 50 \
+        -redo \
         >> {log} 2>&1
         """
 
