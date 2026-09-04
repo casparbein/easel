@@ -19,7 +19,8 @@ rule extract_ali_muscle_afa:
         muscle \
         -align {input.in_fasta} \
         -diversified \
-        -output {output.out_fasta}
+        -output {output.out_fasta} \
+        >> {log} 2>&1
         """
 
 ## Get best alignment (MaxCC)
@@ -39,7 +40,8 @@ rule extract_ali_muscle_best:
         """
         muscle \
         -maxcc {input.in_fasta} \
-        -output {output.out_fasta}
+        -output {output.out_fasta} \
+        >> {log} 2>&1
         """
 
 ## Get column confidence scores
@@ -62,7 +64,8 @@ rule extract_ali_muscle_cc:
         muscle \
         -letterconf {params.in_ensemble} \
         -ref {input.in_fasta} \
-        -output {output.out_conf}
+        -output {output.out_conf} \
+        >> {log} 2>&1
         """
 
 rule filter_muscle_confidence:
