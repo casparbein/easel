@@ -49,7 +49,7 @@ rule extract_ali_muscle_cc:
     input:
         in_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa" 
     output:
-        out_conf = "codon_alignments/{transcript_id}/tmp/{transcript_id}_conf.fa"
+        out_conf = temp("codon_alignments/{transcript_id}/tmp/{transcript_id}_conf_tmp.fa")
     params:
         in_ensemble = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.afa"
     resources:
@@ -67,6 +67,23 @@ rule extract_ali_muscle_cc:
         -output {output.out_conf} \
         >> {log} 2>&1
         """
+
+rule convert_conf:
+    input:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_conf_tmp.fa",
+    output:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_conf.fa",
+    log:
+        "logs/convert_conf/{transcript_id}.log"
+    resources:
+        runtime = "5min",
+    group:  "align_clean"
+    shell:
+    """
+    cat {input} \
+    | tr '_.,/:=@*^' '123456789' \
+    > {output}
+    """
 
 rule filter_muscle_confidence:
     input:
