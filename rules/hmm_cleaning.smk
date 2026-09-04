@@ -113,7 +113,7 @@ rule clean_transfer_cleaner:
     shell:
         r"""
         set -euo pipefail
-        grep -v "#" {input} > {output} 2>> {log} || true
+        grep -v "#" {input} | sed 's/*/-/g' > {output} 2>> {log} || true
         if ! grep -q '^>' {output}; then
             echo "no sequences left after HMM-cleaner transfer for {input}" | tee -a {log} >&2
             exit 1
