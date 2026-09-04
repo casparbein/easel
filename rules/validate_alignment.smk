@@ -64,7 +64,7 @@ def transcript_targets(wildcards):
         return []
 
     extra = []
-    if config["settings"]["alignmentSettings"]["aligner"] in ("prank_nt", "prank_codon"):
+    if config["settings"]["alignmentSettings"]["aligner"] in ("prank_nt", "prank_codon") and not config["settings"]["selectionSettings"]["doScreenOnly"]:
         extra.append(f"codon_alignments/{tid}/tmp/{tid}_ori_aa.fa")
     if config["settings"]["treeSettings"]["computeGeneTrees"]["activate"]:
         extra.append(f"codon_alignments/{tid}/{tid}_iqtree.nh")
