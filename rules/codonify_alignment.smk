@@ -8,7 +8,8 @@ def get_input_codonify(wildcards):
     ## TOGA2 and free mode both reduced to the same muscle-vs-other test; the
     ## third (implicit TOGA v1) case ignored the aligner and always returned
     ## _ori.fa, which -toga does too by having no working rule chain at all.
-    if config["settings"]["alignmentSettings"]["aligner"] == "muscle" and config["freeMode"]:
+    if config["settings"]["alignmentSettings"]["aligner"] == "muscle" and config["freeMode"] \
+    and not config["settings"]["selectionSettings"]["doScreenOnly"]:
         ## This is a temporary adjustment for Muscle testing, not yet implemented
         return "codon_alignments/{transcript_id}/tmp/{transcript_id}_muscle_filtered.fa"
     else:
