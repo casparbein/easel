@@ -116,7 +116,7 @@ def main() -> None:
     log.info("The user-set threshold for letter confidence is {}".format(threshold))
     fasta_dict = read_fasta(input_fasta)
     conf_dict = read_fasta(input_confidence)
-    filtered_dict = filter_alignment(fasta_dict, conf_dict, threshold)
+    filtered_dict = filter_alignment(fasta_dict, conf_dict, threshold, reference)
     with open(output, "w") as out:
         for spec in filtered_dict.keys():
             out.write(spec+"\n"+filtered_dict[spec]+"\n")
