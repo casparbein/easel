@@ -68,7 +68,7 @@ rule filter_muscle_confidence:
         filtered_ali = "codon_alignments/{transcript_id}/{transcript_id}_muscle_filtered.fa"
     group: "align_clean"
     params:
-        reference = config["referenceName"] else "",
+        reference = config.get("referenceName") or "",
     log: "logs/filter_muscle_confidence/{transcript_id}.log"
     script: 
         "../scripts/filter_muscle_conf.py"
