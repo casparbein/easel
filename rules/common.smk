@@ -381,7 +381,7 @@ def cleaning_transitions():
     """
     cln = config["settings"]["cleaningSettings"]
     stages = []
-    if config["settings"]["alignmentSettings"]["aligner"] in CODONIFYING_ALIGNERS:
+    if config["settings"]["alignmentSettings"]["aligner"] in CODONIFYING_ALIGNERS and not config["settings"]["selectionSettings"]["doScreenOnly"]:
         stages.append("codonify")
     if cln["hmmCleaning"]["doHMMCleaning"]:
         stages.append("hmm")
