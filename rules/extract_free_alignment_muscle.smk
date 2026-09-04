@@ -1,13 +1,12 @@
 ## Align with Muscle 5
 rule extract_ali_muscle_afa:
     input:
-        in_fasta =  f"{config['fastaPath']}{{transcript_id}}{config['fileSuffix']}"
+        in_fasta =  f"{config["fastaPath"]}{{transcript_id}}{config["fileSuffix"]}"
     output:
         out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.afa",
     threads:
         10
     resources:
-        runtime = "2h",
         mem_mb = 20000
     group: "align_clean"
     log:
@@ -19,8 +18,7 @@ rule extract_ali_muscle_afa:
         muscle \
         -align {input.in_fasta} \
         -diversified \
-        -output {output.out_fasta} \
-        >> {log} 2>&1
+        -output {output.out_fasta}
         """
 
 ## Get best alignment (MaxCC)
@@ -30,8 +28,6 @@ rule extract_ali_muscle_best:
     output:
         out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa",
     group: "align_clean"
-    resources:
-        runtime = "10m",
     log:
         "logs/muscle_best/{transcript_id}.log"
     conda:
@@ -40,8 +36,7 @@ rule extract_ali_muscle_best:
         """
         muscle \
         -maxcc {input.in_fasta} \
-        -output {output.out_fasta} \
-        >> {log} 2>&1
+        -output {output.out_fasta}
         """
 
 ## Get column confidence scores
@@ -53,8 +48,6 @@ rule extract_ali_muscle_cc:
     params:
         in_ensemble = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.afa"
     group: "align_clean"
-    resources:
-        runtime = "10m",
     log:
         "logs/muscle_cc/{transcript_id}.log"
     conda:
@@ -64,6 +57,18 @@ rule extract_ali_muscle_cc:
         muscle \
         -letterconf {params.in_ensemble} \
         -ref {input.in_fasta} \
-        -output {output.out_conf} \
-        >> {log} 2>&1
+        -output {output.out_conf}
         """
+
+rule filter_muscle_confidence:
+    input:
+        in_ali = "codon_alignments/{transcript_id}/{transcript_id}_ori.fa",
+        conf_scores = "codon_alignments/{transcript_id}/{transcript_id}_conf.fa"
+    output:
+        filtered_ali = "codon_alignments/{transcript_id}/{transcript_id}_muscle_filtered.fa"
+    group: "align_clean"
+    params:
+        reference = config["referenceName"] else "",
+    log: "logs/filter_muscle_confidence/{transcript_id}.log"
+    script: 
+        "../scripts/filter_muscle_conf.py"
