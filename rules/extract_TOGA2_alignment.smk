@@ -13,7 +13,8 @@ rule extract_ali:
         twoBit = config["settings"]["alignmentSettings"]["fromTOGA"]["twoBitPath"],
         ## ISSUE: TOGA container not yet available
         activate = config["settings"]["alignmentSettings"]["fromTOGA"].get("toga2Activate") or "",
-        tmp_dir = "codon_alignments/{transcript_id}/tmp"
+        tmp_dir = "codon_alignments/{transcript_id}/tmp",
+        confidence_scores  = "--confidence_threshold 9 " if config["settings"]["alignmentSettings"]["aligner"] == "muscle" else "",
     threads:
         config["resources"]["extractAlignments"]["threads"],
     resources:
@@ -34,6 +35,7 @@ rule extract_ali:
               --input_dirs {input.spec_names} \
               --transcript_id {params.transcript_id} \
               {params.additional} \
+              {params.confidence_scores} \
               --seed {params.seed} \
               --tmp_dir {params.tmp_dir} \
               -o {output.codon_ali} \
@@ -60,3 +62,6 @@ rule clean_TOGA2_stop:
         "../envs/manual_cleaner.yaml"
     script:
         "../scripts/manual_filter_msa.py"
+
+
+--confidence_scores
