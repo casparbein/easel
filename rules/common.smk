@@ -685,6 +685,8 @@ def get_uncleaned_alignment(wildcards):
     easel.validate.CODON_AWARE_ALIGNERS)."""
     if config["settings"]["alignmentSettings"]["aligner"] in CODONIFYING_ALIGNERS:
         return "codon_alignments/{transcript_id}/tmp/{transcript_id}.masked.fa"
+    elif config["toga2Mode"]:
+        return "codon_alignments/{transcript_id}/tmp/{transcript_id}_ren.fa
     else:
         return "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa"
 

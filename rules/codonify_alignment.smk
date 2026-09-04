@@ -15,7 +15,7 @@ def get_input_codonify(wildcards):
         return "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa"
 
 
-## Temporary rule: Rename REFERNECE to config["referenceName"] because ref in species tree will likely not be named REFERNECE and
+## Temporary rule: Rename REFERNECE to config["referenceName"] because ref in species tree will likely not be named REFERENCE and
 ## otherwise TOGA2 alignment extraction will not work.
 rule rename_reference:
     input:
