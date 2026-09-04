@@ -62,6 +62,3 @@ rule clean_TOGA2_stop:
         "../envs/manual_cleaner.yaml"
     script:
         "../scripts/manual_filter_msa.py"
-
-
---confidence_scores
