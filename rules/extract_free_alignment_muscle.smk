@@ -65,7 +65,7 @@ rule filter_muscle_confidence:
         in_ali = "codon_alignments/{transcript_id}/{transcript_id}_ori.fa",
         conf_scores = "codon_alignments/{transcript_id}/{transcript_id}_conf.fa"
     output:
-        filtered_ali = "codon_alignments/{transcript_id}/{transcript_id}_muscle_filtered.fa"
+        filtered_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}_muscle_filtered.fa"
     group: "align_clean"
     params:
         reference = config.get("referenceName") or "",
