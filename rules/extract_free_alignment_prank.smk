@@ -35,19 +35,39 @@ rule extract_ali_prank:
         """
 
 
-rule rename_prank:
+rule rule rename_prank:
     input:
-        in_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.best.fas"
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.best.fas"
     output:
-        out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa"
-    group: "align_clean"
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa",
+    params:
+        mincodon = 0,
+        minseq =  0,
+        minaalen = 0,
+        mask = True,
+    threads: 1,
     resources:
-        runtime = "5m",
+        runtime = "5m"
+    group: "align_clean"
     log:
-        "logs/rename_prank/{transcript_id}.log",
-    shell:
-        "cp {input.in_fasta} {output.out_fasta} 2>> {log}"
+        "logs/rename_prank/{transcript_id}.log"
+    conda:
+        "../envs/manual_cleaner.yaml"
+    script:
+        "../scripts/manual_filter_msa.py"
 
+# rule rename_prank:
+#     input:
+#         in_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.best.fas"
+#     output:
+#         out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa"
+#     group: "align_clean"
+#     resources:
+#         runtime = "5m",
+#     log:
+#         "logs/rename_prank/{transcript_id}.log",
+#     shell:
+#         "cp {input.in_fasta} {output.out_fasta} 2>> {log}"
 
 rule translate_prank_aa:
     input:

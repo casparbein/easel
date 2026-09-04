@@ -3,6 +3,13 @@
 ## Split out of alignment_postprocessing.smk; get_uncleaned_alignment lives
 ## in rules/common.smk since rules/manual_cleaning.smk needs it too.
 
+## Input function for hmm_cleaner:
+def get_input_for_hmm(wildcards):
+    if config["settings"]["alignmentSettings"]["aligner"] not in CODONIFYING_ALIGNERS and not config["toga2Mode"]:
+        return "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori_aa.fa"
+    else:
+        return get_uncleaned_alignment(wildcards)
+
 ## Convert nucleotide alignment to amino acids for HMM cleaner. For a
 ## codon-aware aligner (macse2/prank_codon) that is the aligner's direct
 ## output.

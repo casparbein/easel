@@ -3,7 +3,7 @@ rule extract_ali:
     input:
         spec_names = "species.TOGA.dir.txt",
     output:
-        codon_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa",
+        codon_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori_raw.fa",
     params:
         transcript_id = "{transcript_id}",
         reference = config["referenceName"],
@@ -39,3 +39,24 @@ rule extract_ali:
               -o {output.codon_ali} \
               >> {log} 2>&1
         """
+
+rule clean_TOGA2_stop:
+    input:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori_raw.fa"
+    output:
+        "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.fa",
+    params:
+        mincodon = 0,
+        minseq =  0,
+        minaalen = 0,
+        mask = True,
+    threads: 1,
+    resources:
+        runtime = "5m"
+    group: "align_clean"
+    log:
+        "logs/clean_TOGA2_stop/{transcript_id}.log"
+    conda:
+        "../envs/manual_cleaner.yaml"
+    script:
+        "../scripts/manual_filter_msa.py"
