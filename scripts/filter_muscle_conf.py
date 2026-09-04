@@ -84,7 +84,7 @@ def filter_alignment(fasta, confidence, threshold, reference):
         if confidence[species]:
             current_seq = ''
             for i, nuc in enumerate(fasta[species]):
-                if confidence[species][i] == "-":
+                if confidence[species][i] == "-" or not isinstance(confidence[species][i], int):
                     current_seq += "-"
                 elif int(confidence[species][i]) < threshold:
                     current_seq += "-"
