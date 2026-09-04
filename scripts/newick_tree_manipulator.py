@@ -223,6 +223,7 @@ def main():
         filemode="w",
         level=logging.DEBUG,
         format="[%(levelname)s] %(message)s",
+        force=True
     )
 
     log.info(f"Branches to keep: {branches_to_keep}")
