@@ -1,8 +1,7 @@
 # easel
 
 easel (EAsy SELection) is a [snakemake](https://snakemake.readthedocs.io/en/stable/index.html) pipeline for large-scale screens of 
-positive (episodic diversifying) and relaxed selection. Easel uses tools from the [HyPhy](https://hyphy.org) suite and scales to hundreds of species and thousands of 
-transcripts.
+positive (episodic diversifying) and relaxed selection. Easel uses tools from the [HyPhy](https://hyphy.org) suite and [BayesCode](https://github.com/ThibaultLatrille/bayescode) and scales to hundreds of species and thousands of transcripts.
 
 > **Status:** pre-release. 
 Feel free to open a GitHub issue whenever something does not work properly
@@ -81,7 +80,7 @@ Alternatively, you can pass your own `my_config.yaml` file to easel, but it has 
 In Free Mode, you can pass your own unaligned or pre-aligned fasta files,
 living in my_transcripts/. 
 ```bash
-# your own FASTA files, per-gene trees, BUSTED with error-sink
+# your own FASTA files, nucleotide FASTA alignment (computed with Prank), per-gene trees (computed with IQtree), BUSTED with error-sink
 easel -free my_transcripts/ \
        -a prank_nt \
        --reference_name hg38 \
@@ -116,7 +115,36 @@ TBC
 TBC
 
 ## Tools used by easel
-TBC
+
+Easel automates alignment, gene-tree inference and selection screen using the latest state-of-the-art tools. If you use easel, please cite these tools accordingly.
+A list of all relevant articles is available [here](https://github.com/casparbein/easel/docs/citations.md).
+
+Orthology inference:
+- [TOGA2](https://github.com/hillerlab/TOGA2)
+<br/>
+
+
+Alignment:
+- [Prank](https://github.com/ariloytynoja/prank-msa) (Codon and Nucleotide modes)
+- [Macse2](https://www.agap-ge2pop.org/macsee-pipelines/) (Nucleotide)
+- [Muscle5](https://github.com/rcedgar/muscle) (Codon)
+<br/>
+
+
+Gene tree inference:
+- [IQtree3](https://github.com/iqtree/iqtree3)
+<br/>
+
+
+Selection screens:
+- [HyPhy](https://github.com/veg/hyphy)
+  - [BUSTED](https://hyphy.org/methods/busted/)
+  - [aBSREL](https://hyphy.org/methods/absrel/)
+  - [MEME](https://hyphy.org/methods/meme/)
+  - [RELAX](https://hyphy.org/methods/relax/)
+- [BayesCode](https://github.com/ThibaultLatrille/bayescode)
+<br/>
+
 
 ## Known issues
 easel's [TOGA2](https://github.com/hillerlab/TOGA2) mode is still under development and not yet functional.
