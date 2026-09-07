@@ -57,6 +57,14 @@ def check(path, min_taxa=4, foreground=(), min_ungapped_fraction=0.1):
         return "SKIP", (f"only {len(informative)} informative sequence(s) of "
                         f"{len(seqs)}, need {min_taxa}")
 
+    
+    ## Since IQ tree fails if there is a sequence with only gaps/missing/ambigous characters
+    ## This case has to be filtered out as well:
+    for curr_name, curr_seq in zip(names, seqs):
+        if sum(1 for c in curr_Seq if c in GAP_CHAR) >= width:
+            return "SKIP", (f"sequence {curr_name} is only gaps or ambigous characters, "
+                        f"IQtree cannot handle this.")
+
     if all(all(c in GAP_CHARS for c in col) for col in zip(*seqs)):
         return "SKIP", "every alignment column is gaps or N"
 
