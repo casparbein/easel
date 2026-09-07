@@ -61,7 +61,7 @@ def check(path, min_taxa=4, foreground=(), min_ungapped_fraction=0.1):
     ## Since IQ tree fails if there is a sequence with only gaps/missing/ambigous characters
     ## This case has to be filtered out as well:
     for curr_name, curr_seq in zip(names, seqs):
-        if sum(1 for c in curr_seq if c in GAP_CHAR) >= width:
+        if sum(1 for c in curr_seq if c in GAP_CHARS) >= width:
             return "SKIP", (f"sequence {curr_name} is only gaps or ambigous characters, "
                         f"IQtree cannot handle this.")
 
