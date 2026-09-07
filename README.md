@@ -86,11 +86,12 @@ easel -free my_transcripts/ \
        --reference_name hg38 \
        -ct \
        -bu srv,error_sink \
-       -rs
+       -dr
 ```
-
 Nothing runs unless you pass `-dr` (dry run) or `-rs`. Without either, easel
 writes `DEF.yaml` and stops.
+
+It is recommended to first perform a 'dry run' (`-dr` option in easel) to get an idea of how many jobs the pipeline will perform. Depending on number of input sequences, this can take some time (see Known Issues). When actually running the screen (`-rs`), it might again take some time for the pipeline to schedule all necessary jobs.
 
 Since snakemake manages job submissions, easel is mostly intended to run on an HPC login node, through a **screen session** (Given that runs can take between minutes and several hours). Set it up like this:
 
@@ -147,5 +148,6 @@ Selection screens:
 
 
 ## Known issues
-easel's [TOGA2](https://github.com/hillerlab/TOGA2) mode is still under development and not yet functional.
+- easel's [TOGA2](https://github.com/hillerlab/TOGA2) mode is still under development and not yet functional.
+- Depending on the number of input sequences, DAG creation can take up to ~20-30 Minutes (>5000 input sequences), for both dry runs and actual runs. 
 
