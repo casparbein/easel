@@ -14,7 +14,7 @@ Currently, easel requires the slurm scheduling system and mamba or conda (see "I
 ## Install
 
 ```bash
-git clone https://github.com/casparbein/eaSel.git
+git clone https://github.com/casparbein/easel.git
 cd easel
 conda env create -f environment.yaml
 conda activate easel
