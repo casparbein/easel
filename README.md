@@ -325,3 +325,6 @@ All AI-generated content was reviewed by the author, and the pipeline was extens
 ## Known issues
 - Depending on the number of input sequences, DAG creation can take up to ~20-30 Minutes (>5000 input sequences), mostly for dry-runs 
 
+## License
+easel is released under the GNU General Public License v3.0 or later.
+
