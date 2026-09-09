@@ -1,0 +1,63 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install ruff
+      # Start strict-but-narrow: syntax errors and undefined names only.
+      # Widen the rule set once the existing 10.5k lines are cleaned up.
+      - run: ruff check easel/ scripts/ --select E9,F63,F7,F82 --output-format=github
+
+  dryrun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e .
+      - name: DAG builds for the committed test data
+        run: |
+          mkdir -p ci_run && cd ci_run
+          easel -free ../test_input/free --do_screen_only -ct \
+                --local --cores 2 --directory_name smk -dr
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e .
+
+      - name: Generate DEF.yaml and run preprocessing
+        run: |
+          mkdir -p ci_run && cd ci_run
+          easel -free ../test_input/free --do_screen_only -ct \
+                --local --cores 2 --directory_name smk
+
+      # Phase 1 needs no conda: extract_ali, validate_alignment and
+      # keep_final_alignment all run stdlib-only scripts. easel passes
+      # --use-conda unconditionally, and snakemake probes for conda whenever
+      # that flag is present even if no rule uses an environment -- so drive
+      # snakemake directly here instead.
+      - name: Phase 1 on 3 real alignments
+        run: |
+          cd ci_run/smk
+          snakemake validated \
+            --snakefile "$GITHUB_WORKSPACE/Snakefile_standard" \
+            --directory . --cores 2 \
+            --config easel_phase=validate --keep-going
+
+      - name: Assert all three passed validation
+        run: |
+          test "$(awk -F'\t' 'NR>1 && $2=="OK"' ci_run/smk/validation_summary.tsv | wc -l)" -eq 3
+

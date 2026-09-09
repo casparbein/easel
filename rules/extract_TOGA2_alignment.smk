@@ -21,7 +21,7 @@ rule extract_ali:
         mem_mb = config["resources"]["extractAlignments"]["mem_mb"],
         runtime = "10h",
     group: "align_clean"
-    ## HmmCleaner is not on bioconda
+    ## TOGA2 is not on bioconda
     container:
         "docker://ghcr.io/hillerlab/toga2_local:latest"
     log:

@@ -1,20 +1,26 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=68", "setuptools-scm>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "easel"
 dynamic = ["version"]
+
+[tool.setuptools_scm]
+version_file = "easel/_version.py"
+
 description = "Selection screens with HyPhy over thousands of coding sequences"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 keywords = ["phylogenetics", "selection", "hyphy", "snakemake", "toga"]
+license = { text = "GPL-3.0-or-later" }
 classifiers = [
   "Programming Language :: Python :: 3",
   "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
   "Operating System :: POSIX :: Linux",
-  "Operating System :: MacOS",
 ]
+
 
 # ruamel.yaml and ete4 are the only imports of the CLI itself. snakemake and
 # the SLURM plugin are runtime requirements of the workflow, not of the module,
