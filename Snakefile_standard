@@ -80,6 +80,8 @@ rule validated:
             transcript_id=transcripts)),
         skip_on_import(lambda: expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa",
                transcript_id=transcripts)),
+        skip_on_import(lambda: expand("codon_alignments/{transcript_id}/tmp/{transcript_id}_ori_aa.fa",
+               transcript_id=transcripts) if config["settings"]["alignmentSettings"]["aligner"] == "prank_codon" else []),
         skip_on_import(lambda: expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
             transcript_id=transcripts) if WANT_CLEANING_REPORT else []),
 
