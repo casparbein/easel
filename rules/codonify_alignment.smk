@@ -88,5 +88,5 @@ rule codonify_ali:
     log:
         "logs/codonify_ali/{transcript_id}.log"
     script:
-        "codonify_frameshifts.py"
+        "../scripts/codonify_frameshifts.py"
 
