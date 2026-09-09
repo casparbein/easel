@@ -7,7 +7,9 @@ use-conda: True
 use-apptainer: True
 restart-times: 1
 rerun-incomplete: True
-printshellcmds: True
+printshellcmds: False
+quiet:
+  - rules
 scheduler: greedy
 latency-wait: 120
 default-resources:
