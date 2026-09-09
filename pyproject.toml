@@ -58,3 +58,22 @@ version = { attr = "easel.__version__" }
 "share/easel/envs" = ["envs/*.yaml"]
 "share/easel/scripts" = ["scripts/*.py", "scripts/*.R"]
 "share/easel/prof" = ["prof/config.yaml"]
+
+[tool.ruff]
+# Only the files easel ships; run directories a user creates are not ours to lint.
+include = ["easel/**/*.py", "scripts/**/*.py"]
+
+[tool.ruff.lint.per-file-ignores]
+# Snakemake injects a `snakemake` object into the module globals of any file
+# used with a `script:` directive, so ruff cannot see where the name comes from
+# and reports F821. Scoped to exactly the scripts invoked that way.
+#
+# NOT solved by declaring the name at module scope: check_alignment.py branches
+# on `"snakemake" in globals()` to tell a snakemake run from a CLI debug run,
+# and a module-level assignment would make that test always true.
+"scripts/check_alignment.py" = ["F821"]
+"scripts/filter_muscle_conf.py" = ["F821"]
+"scripts/manual_filter_msa.py" = ["F821"]
+"scripts/newick_tree_manipulator.py" = ["F821"]
+"scripts/transform_aa.py" = ["F821"]
+
