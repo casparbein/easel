@@ -35,32 +35,58 @@ rule rename_reference:
         cat {input} | sed 's/REFERENCE/{params.ref_name}/g' > {output} 2>> {log}
         """
 
-## Codonify should be here as it should also be applied to Free alignments
+# ## Codonify should be here as it should also be applied to Free alignments
+# rule codonify_ali:
+#     input:
+#         ali="codon_alignments/{transcript_id}/tmp/{transcript_id}_ren.fa",
+#     output:
+#         codon_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}.masked.fa",
+#         premask_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}.premasked.fa",
+#         frameshifts = "codon_alignments/{transcript_id}/tmp/{transcript_id}.frameshifts.txt"
+#     params:
+#         reference = config["referenceName"],
+#         out_head = "codon_alignments/{transcript_id}/tmp/{transcript_id}"
+#     threads:
+#         config["resources"]["hmmCleaner"]["threads"]
+#     resources:
+#         mem_mb = config["resources"]["hmmCleaner"]["mem_mb"],
+#         runtime = "15m"
+#     ## ISSUE: Update to newest codonify script
+#     ## ISSUE: codonify is currently local
+#     group: "align_clean"
+#     log:
+#         "logs/codonify_ali/{transcript_id}.log"
+#     shell:
+#         """
+#         codonify_prank_alignment.py \
+#         -i {input} \
+#         -o {params.out_head} \
+#         -r {params.reference} \
+#         >> {log} 2>&1
+#         """
+
 rule codonify_ali:
     input:
         ali="codon_alignments/{transcript_id}/tmp/{transcript_id}_ren.fa",
     output:
-        codon_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}.masked.fa",
+        codon_ali   = "codon_alignments/{transcript_id}/tmp/{transcript_id}.masked.fa",
         premask_ali = "codon_alignments/{transcript_id}/tmp/{transcript_id}.premasked.fa",
-        frameshifts = "codon_alignments/{transcript_id}/tmp/{transcript_id}.frameshifts.txt"
+        frameshifts = "codon_alignments/{transcript_id}/tmp/{transcript_id}.frameshifts.txt",
+        units       = "codon_alignments/{transcript_id}/tmp/{transcript_id}.units.tsv",
     params:
         reference = config["referenceName"],
-        out_head = "codon_alignments/{transcript_id}/tmp/{transcript_id}"
-    threads:
-        config["resources"]["hmmCleaner"]["threads"]
+        out_head  = "codon_alignments/{transcript_id}/tmp/{transcript_id}",
+        mask_upstream = 1,   # optional, same meaning as -u
+        mask_downstream = 1, # optional, same meaning as -m
+        cterm_mask=10,  # optional, same meaning as -c
+        # verbose = True,      # full per-unit report into the log
+    threads: 1
     resources:
-        mem_mb = config["resources"]["hmmCleaner"]["mem_mb"],
-        runtime = "15m"
-    ## ISSUE: Update to newest codonify script
-    ## ISSUE: codonify is currently local
+        mem_mb = 1000,
+        runtime = "10m"
     group: "align_clean"
     log:
         "logs/codonify_ali/{transcript_id}.log"
-    shell:
-        """
-        codonify_prank_alignment.py \
-        -i {input} \
-        -o {params.out_head} \
-        -r {params.reference} \
-        >> {log} 2>&1
-        """
+    script:
+        "codonify_prank_alignment_v3.py"
+
