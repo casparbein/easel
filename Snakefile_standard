@@ -31,6 +31,8 @@ wildcard_constraints:
     transcript_id = transcript_wildcard_pattern(transcripts),
 
 
+localrules: extract_ali, keep_final_alignment, validate_alignment
+
 ## Create the desired output files
 def gather_input():
     all_input = []
