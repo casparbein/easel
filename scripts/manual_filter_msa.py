@@ -5,33 +5,40 @@
 #    remaining codon columns are valid, or whose retained alignment is shorter
 #    than `--minaalen` amino acids.
 # Optionally masks bad codons and stop codons in the output with NNN.
+#
+# Dependency-free on purpose: FASTA parsing comes from the sibling _seqio module
+# and the column reduction is a plain zip()
 
 import logging
 import math
+import os
 import sys
-import re
-import numpy as np
-import pyfastx
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _seqio import iter_fasta  # noqa: E402
 
 __author__ = "Ekaterina Osipova, 2020, adapted by Bernhard Bein, 2026"
 
 ## Logging
 log = logging.getLogger(__name__)
+LOG_LEVEL = logging.INFO
 
-## A "good" codon: exactly three unambiguous ATGC bases (case-insensitive)
-GOOD_CODON_PATTERN = re.compile(r"^[ATGCatgc]{3}$")
-## Compared upper-cased. GOOD_CODON_PATTERN accepts mixed case, so "Tag" and
-## "tAA" passed is_good_codon and were never masked.
+GOOD_BASES = frozenset("ATGCatgc")
 STOP_CODONS = frozenset({"TAG", "TGA", "TAA"})
+
+_CODON_IS_GOOD: dict[str, bool] = {}
 
 ## Read/Write input
 def read_fasta(fasta_file: str) -> dict[str, str]:
     """
     Read a FASTA alignment into an ordered dict {name: sequence}.
     Validates that all sequences have the same length (required for an MSA).
+
+    Names are truncated at the first whitespace, matching what pyfastx used to
+    return here. .gz input is handled by _seqio.
     """
     fasta_dict: dict[str, str] = {}
-    for name, seq in pyfastx.Fasta(fasta_file, build_index=False):
+    for name, seq in iter_fasta(fasta_file, full_header=False):
         fasta_dict[name] = seq
 
     lengths = {len(s) for s in fasta_dict.values()}
@@ -76,15 +83,20 @@ def write_alignment(
             print(f">{name}")
             print(fasta_dict[name])
 
+
 ## Small helper functions
 def is_good_codon(codon: str) -> bool:
     """Return True if *codon* is a valid, non-ambiguous, non-gap triplet."""
-    return bool(GOOD_CODON_PATTERN.match(codon))
+    verdict = _CODON_IS_GOOD.get(codon)
+    if verdict is None:
+        verdict = len(codon) == 3 and not (set(codon) - GOOD_BASES)
+        _CODON_IS_GOOD[codon] = verdict
+    return verdict
 
 
 def seq_to_codons(seq: str) -> list[str]:
     """Split *seq* into a list of codon strings (triplets)."""
-    return [seq[i : i + 3] for i in range(0, len(seq) - len(seq) % 3, 3)]
+    return [seq[i: i + 3] for i in range(0, len(seq) - len(seq) % 3, 3)]
 
 
 def codon_goodness_vector(seq: str) -> list[bool]:
@@ -92,39 +104,34 @@ def codon_goodness_vector(seq: str) -> list[bool]:
     return [is_good_codon(c) for c in seq_to_codons(seq)]
 
 
-## Column Filtering 
+## Column Filtering
 def select_good_columns(
-    fasta_dict: dict[str, str], min_good_fraction: float
+    codon_rows: dict[str, list[str]], min_good_fraction: float
 ) -> list[int]:
     """
     Return the list of codon-column indices where at least
     *min_good_fraction* of sequences carry a valid codon.
 
-    Logs every dropped column with its actual fraction.
+    Takes the already-split codon rows so the split is paid once for the whole
+    run rather than once per stage. 
     """
-    names = list(fasta_dict)
-    n_seqs = len(names)
+    n_seqs = len(codon_rows)
+    if not n_seqs:
+        return []
 
-    # Build boolean matrix: rows = sequences, columns = codon positions
-    bool_matrix = np.array(
-        [codon_goodness_vector(fasta_dict[name]) for name in names],
-        dtype=bool,
-    )
-    n_cols = bool_matrix.shape[1]
-    ## ceil, not round: round(0.8 * 3) == 2, so an '80% coverage' filter
-    ## admitted 67%; banker's rounding also made round(0.5 * 1) == 0.
+    goodness_rows = [[is_good_codon(c) for c in row] for row in codon_rows.values()]
+    n_cols = len(goodness_rows[0])
     threshold = math.ceil(min_good_fraction * n_seqs)
 
     good_cols: list[int] = []
     dropped_cols: list[tuple[int, float]] = []
 
-    for col_idx in range(n_cols):
-        n_good = bool_matrix[:, col_idx].sum()
-        fraction = n_good / n_seqs
+    for col_idx, column in enumerate(zip(*goodness_rows)):
+        n_good = sum(column)
         if n_good >= threshold:
             good_cols.append(col_idx)
         else:
-            dropped_cols.append((col_idx, fraction))
+            dropped_cols.append((col_idx, n_good / n_seqs))
 
     ## Summary
     log.info(
@@ -137,54 +144,64 @@ def select_good_columns(
     )
 
     if dropped_cols:
-        for col_idx, frac in dropped_cols:
-            log.debug(
-                "  Dropped codon column %d: %.1f%% good codons (threshold %.1f%%).",
-                col_idx,
-                frac * 100,
-                min_good_fraction * 100,
-            )
-        ## Log a compact summary at INFO level instead of one line per column
-        dropped_indices = [str(c) for c, _ in dropped_cols]
-        log.info("  Dropped codon column indices: %s", ", ".join(dropped_indices))
+        if log.isEnabledFor(logging.DEBUG):
+            for col_idx, frac in dropped_cols:
+                log.debug(
+                    "  Dropped codon column %d: %.1f%% good codons (threshold %.1f%%).",
+                    col_idx,
+                    frac * 100,
+                    min_good_fraction * 100,
+                )
+        ## Compact summary at INFO level instead of one line per column
+        log.info(
+            "  Dropped codon column indices: %s",
+            ", ".join(str(c) for c, _ in dropped_cols),
+        )
 
     return good_cols
 
 
-## Apply column filtering + masking codons (masking premature stop codons probably obsolete due to codonification doing this already)
+## Apply column filtering + masking codons (masking premature stop codons probably
+## obsolete due to codonification doing this already)
 def apply_column_filter(
-    fasta_dict: dict[str, str],
+    codon_rows: dict[str, list[str]],
     good_columns: list[int],
     mask: bool,
-) -> dict[str, str]:
+) -> tuple[dict[str, str], dict[str, int]]:
     """
     Retain only *good_columns* in each sequence.
     If *mask* is True, replace each remaining bad codon and stop codon with NNN.
+
+    Returns (filtered, good_counts). *good_counts* is the number of good codons
+    each filtered sequence ends up with -- counted here, while every codon is
+    already in hand, so select_good_sequences does not have to walk the whole
+    alignment a second time to recompute it.
     """
     filtered: dict[str, str] = {}
-    for name, seq in fasta_dict.items():
-        codons = seq_to_codons(seq)
-        kept = [codons[i] for i in good_columns]
+    good_counts: dict[str, int] = {}
 
-        if mask:
-            masked: list[str] = []
-            for codon in kept:
-                if codon.upper() in STOP_CODONS:
-                    masked.append("NNN")
-                elif not is_good_codon(codon):
-                    masked.append("NNN")
-                else:
-                    masked.append(codon)
-            kept = masked
-
+    for name, codons in codon_rows.items():
+        kept: list[str] = []
+        n_good = 0
+        for i in good_columns:
+            codon = codons[i]
+            if mask and (codon.upper() in STOP_CODONS or not is_good_codon(codon)):
+                kept.append("NNN")          # NNN is not a good codon, so not counted
+            else:
+                kept.append(codon)
+                if is_good_codon(codon):
+                    n_good += 1
         filtered[name] = "".join(kept)
+        good_counts[name] = n_good
 
-    return filtered
+    return filtered, good_counts
 
 
 ## Filter out rows (seqs) that are below threshold in full codons
 def select_good_sequences(
-    fasta_dict: dict[str, str],
+    filtered: dict[str, str],
+    good_counts: dict[str, int],
+    n_codons: int,
     min_seq_fraction: float,
     min_aa_len: int,
 ) -> list[str]:
@@ -193,20 +210,21 @@ def select_good_sequences(
       1. At least *min_seq_fraction* of codon columns are valid (good codons).
       2. Total number of codon columns >= *min_aa_len*.
 
-    Logs every dropped sequence with the reason.
+    Logs every dropped sequence with the reason. Every filtered sequence has the
+    same width, so *n_codons* is len(good_columns) rather than a per-sequence
+    recount.
     """
     good_names: list[str] = []
     dropped: list[tuple[str, str]] = []
 
-    for name, seq in fasta_dict.items():
-        goodness = codon_goodness_vector(seq)
-        n_codons = len(goodness)
-        n_good = sum(goodness)
+    threshold = math.ceil(min_seq_fraction * n_codons)
+    fails_length = n_codons < min_aa_len
+
+    for name in filtered:
+        n_good = good_counts[name]
         fraction = n_good / n_codons if n_codons > 0 else 0.0
-        threshold = math.ceil(min_seq_fraction * n_codons)
 
         fails_fraction = n_good < threshold
-        fails_length = n_codons < min_aa_len
 
         if fails_fraction or fails_length:
             reasons = []
@@ -230,7 +248,7 @@ def select_good_sequences(
         min_seq_fraction,
         min_aa_len,
         len(good_names),
-        len(fasta_dict),
+        len(filtered),
         len(dropped),
     )
     for name, reason in dropped:
@@ -239,13 +257,11 @@ def select_good_sequences(
     return good_names
 
 
-## CLI args (masked for snakemake executrion)
+## CLI args (masked for snakemake execution)
 def main() -> None:
 
     in_alignment = snakemake.input[0]
     out_alignment = snakemake.output[0]
-    ## Named, not positional: the rule supplies these as named params, so
-    ## reordering that block would silently swap a threshold with the flag.
     mincodon = snakemake.params.mincodon
     minseq   = snakemake.params.minseq
     minaalen = snakemake.params.minaalen
@@ -255,7 +271,7 @@ def main() -> None:
     logging.basicConfig(
         filename=logfile,
         filemode="w",
-        level=logging.DEBUG,
+        level=LOG_LEVEL,
         format="[%(levelname)s] %(message)s",
     )
 
@@ -266,17 +282,20 @@ def main() -> None:
     log.info("Min AA length   : %d", minaalen)
     log.info("Mask bad codons : %s", mask)
 
-    ## Step 0: Read alignment
+    ## Step 0: Read alignment, and split into codons once for every later stage
     fasta_dict = read_fasta(in_alignment)
+    codon_rows = {name: seq_to_codons(seq) for name, seq in fasta_dict.items()}
 
     ## Step 1: Column filtering
-    good_columns = select_good_columns(fasta_dict, mincodon)
+    good_columns = select_good_columns(codon_rows, mincodon)
 
     ## Step 2: Apply column filter (and optionally mask)
-    column_filtered = apply_column_filter(fasta_dict, good_columns, mask)
+    column_filtered, good_counts = apply_column_filter(codon_rows, good_columns, mask)
 
     ## Step 3: Row filtering
-    good_sequences = select_good_sequences(column_filtered, minseq, minaalen)
+    good_sequences = select_good_sequences(
+        column_filtered, good_counts, len(good_columns), minseq, minaalen
+    )
 
     ## Output
     log.info(
