@@ -240,14 +240,13 @@ ORTHOLOGY_FILENAME = "orthology_classification.tsv"
 TRANSCRIPT_STATUS = "TRANSCRIPT"
 
 def _get_assembly_list(path_to_assembly):
-    """Assembly names as vs_<name> run-directory names.
-
+    """
     Delegates the parsing to formats.read_one_column so blanks, comments and
     stray whitespace are handled the same way here as in the CLI.
     """
     from .formats import read_one_column
-    return ["vs_" + name for name in
-            read_one_column(path_to_assembly, label="assembly list", strip_vs=True)]
+    return read_one_column(path_to_assembly, label="assembly list", strip_vs=True)
+
 
 
 def read_list(path_to_list):
@@ -257,8 +256,17 @@ def read_list(path_to_list):
 
 
 def _iter_assembly_dirs(fasta_path: str, assembly_list: list) -> list[str]:
-    """Return sorted list of first-level subdirectory names under fasta_path."""
-    dirs = [a for a in assembly_list if os.path.isdir(os.path.join(fasta_path, a))]
+    """Run-directory NAMES for the assemblies that have one under fasta_path.
+
+    Returns the real directory name -- <assembly> or vs_<assembly>, whichever
+    exists -- so callers can keep doing os.path.join(fasta_path, name, ...).
+    """
+    from .formats import toga_run_dir
+    dirs = []
+    for assembly in assembly_list:
+        resolved = toga_run_dir(fasta_path, assembly)
+        if resolved is not None:
+            dirs.append(os.path.basename(resolved))
     logger.info("Found %d assembly directories under %s", len(dirs), fasta_path)
     return dirs
 
@@ -339,7 +347,8 @@ def run_toga_mode(
         sys.exit(1)
 
     if foreground_list:
-        foreground_list = _get_assembly_list(foreground_list)
+        foreground_list = _iter_assembly_dirs(fasta_path,
+                                              _get_assembly_list(foreground_list))
         logger.info("Foreground list was provided, any transcript has to at least contain one foreground assembly")
 
     ## --- Pre-load all loss_summary.tsv files ---

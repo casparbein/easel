@@ -84,17 +84,20 @@ def read_one_column(path, label="list", strip_vs=False, unique=True):
     return names
 
 
-def check_toga_run_dirs(toga_path, assemblies):
-    """Every assembly must have a vs_<name> run directory under *toga_path*.
+def toga_run_dir(toga_path, assembly):
+    """Run directory for *assembly*, with or without the vs_ prefix.
     """
-    missing = [a for a in assemblies
-               if not os.path.isdir(os.path.join(toga_path, "vs_" + a))]
-    if missing:
-        shown = ", ".join(missing[:5]) + (" ..." if len(missing) > 5 else "")
-        _fail("%d of %d assemblies have no run directory under %s: %s",
-              len(missing), len(assemblies), toga_path, shown)
-    logger.info("All %d assemblies have a run directory under %s",
-                len(assemblies), toga_path)
+    for candidate in (assembly, "vs_" + assembly):
+        path = os.path.join(toga_path, candidate)
+        if os.path.isdir(path):
+            return path
+    return None
+
+
+def check_toga_run_dirs(toga_path, assemblies):
+    """Every assembly must have a run directory under *toga_path*.
+    """
+    missing = [a for a in assemblies if toga_run_dir(toga_path, a) is None]
     return True
 
 

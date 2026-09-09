@@ -451,7 +451,8 @@ def _check_numbers_and_lists(args, r: Resolved):
     if args.foreground_lst:
         r.foreground = _read_list(args.foreground_lst, "foreground list", r)
         if args.assembly_list and r.assemblies:
-            stray = [s for s in r.foreground if s.replace("vs_", "") not in r.assemblies]
+            stray = [s for s in r.foreground
+                     if s.removeprefix("vs_") not in r.assemblies]
             if stray:
                 r.errors.append(
                     f"--foreground_list contains {len(stray)} name(s) absent from "

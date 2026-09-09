@@ -141,11 +141,18 @@ def read_gene_tree_names(input_dir, transcript_list):
 
 
 def write_species_list(toga_path, species_list, out_path="species.TOGA.dir.txt"):
-    """One TOGA run directory per line, for the alignment-extraction rule."""
+    """One TOGA run directory per line, for the alignment-extraction rule.
+
+    Resolves each entry to whichever of <name> / vs_<name> is actually on disk.
+    An entry with no directory is written in its bare form so the failure surfaces 
+    in the rule that reads it rather than silently naming a path that never existed.
+    """
+    from easel.formats import toga_run_dir
     with open(out_path, "w") as fh:
         for entry in species_list:
-            name = entry if entry.startswith("vs_") else "vs_" + entry
-            fh.write(os.path.join(toga_path, name) + "\n")
+            resolved = toga_run_dir(toga_path, entry)
+            fh.write((resolved or os.path.join(toga_path, entry)) + "\n")
+
 
 
 def transcript_wildcard_pattern(transcripts):
