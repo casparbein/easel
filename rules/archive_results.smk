@@ -93,6 +93,7 @@ rule tar_results:
         summary = "codon_alignments/{transcript_id}/done.txt",
     output:
         archive = "codon_alignments/{transcript_id}/results.tar.gz",
+    group: "archive_results"
     params:
         parent = "codon_alignments/{transcript_id}",
     resources:
@@ -129,6 +130,7 @@ rule clean_results:
         archive = "codon_alignments/{transcript_id}/results.tar.gz",
     output:
         marker = "codon_alignments/{transcript_id}/results.cleaned",
+    group: "archive_results"
     params:
         parent = "codon_alignments/{transcript_id}",
     resources:

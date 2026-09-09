@@ -50,6 +50,7 @@ rule tar_compress:
             if WANT_CLEANING_REPORT else []),
     output:
         archive = "codon_alignments/{transcript_id}/tmp.tar.gz",
+    group: "archive_tmp"
     params:
         parent = "codon_alignments/{transcript_id}",
     resources:
@@ -78,6 +79,7 @@ rule clean_tmp:
         final = "codon_alignments/{transcript_id}/{transcript_id}.final.fa",
     output:
         marker = "codon_alignments/{transcript_id}/tmp.cleaned",
+    group: "archive_tmp"
     params:
         parent = "codon_alignments/{transcript_id}",
     resources:
