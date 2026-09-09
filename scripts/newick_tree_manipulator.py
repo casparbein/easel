@@ -5,6 +5,7 @@ import argparse
 import sys
 import logging
 import os
+import re
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _seqio import read_names  # noqa: E402
@@ -170,12 +171,19 @@ def prune_tips(tree, not_prune_labels):
 
 
 ## Name internal ancestors in tree
-def name_ancestors(tree):
+def name_ancestors(tree, tag_len=8):
     for node in tree.traverse("levelorder"):
         if not node.is_leaf:
             left_leaf = list(node.children[0].leaves())[0].name
             right_leaf = list(node.children[-1].leaves())[0].name
-            node.name = f"{left_leaf}_{right_leaf}"
+
+            left_tag = re.sub(r"[^A-Za-z0-9_]", "_", left_leaf)[:tag_len].strip("_")
+            right_tag = re.sub(r"[^A-Za-z0-9_]", "_", right_leaf)[:tag_len].strip("_")
+
+            name = f"N_{left_tag}_{right_tag}"
+            if not name[0].isalpha():
+                name = f"N_{name}"
+            node.name = name
     return tree
 
 ## Name Foreground branches in tree
