@@ -171,7 +171,7 @@ def prune_tips(tree, not_prune_labels):
 
 
 ## Name internal ancestors in tree
-def name_ancestors(tree, tag_len=8):
+def name_ancestors(tree, tag_len=12):
     for node in tree.traverse("levelorder"):
         if not node.is_leaf:
             left_leaf = list(node.children[0].leaves())[0].name
@@ -180,9 +180,9 @@ def name_ancestors(tree, tag_len=8):
             left_tag = re.sub(r"[^A-Za-z0-9_]", "_", left_leaf)[:tag_len].strip("_")
             right_tag = re.sub(r"[^A-Za-z0-9_]", "_", right_leaf)[:tag_len].strip("_")
 
-            name = f"N_{left_tag}_{right_tag}"
+            name = f"{left_tag}_{right_tag}"
             if not name[0].isalpha():
-                name = f"N_{name}"
+                name = f"{name}"
             node.name = name
     return tree
 
