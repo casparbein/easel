@@ -5,6 +5,9 @@ import argparse
 import sys
 import logging
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _seqio import read_names  # noqa: E402
+
 DESCRIPTION = '''\
 Helper script for tree manipulation of phylogenetic trees in newick format.
 Trees can be pruned (leaves are then removed), ancestral branches labelled
@@ -209,7 +212,9 @@ def main():
     input_tree = snakemake.input[0]
     output_tree = snakemake.output[0]
     branches_to_prune = None
-    branches_to_keep = getattr(snakemake.params, "keep", False)
+    ali_path = getattr(snakemake.input, "ali", None)
+    branches_to_keep = read_names(ali_path, full_header=False) if ali_path else []
+    #branches_to_keep = getattr(snakemake.params, "keep", False)
     branches_to_label = getattr(snakemake.params, "label_nodes", False)
     branches_to_label_nested = [branches_to_label]
     ancestor = True
@@ -226,7 +231,8 @@ def main():
         force=True
     )
 
-    log.info(f"Branches to keep: {branches_to_keep}")
+    log.info("Branches to keep: %d taxon/taxa from %s",
+         len(branches_to_keep), ali_path or "(no alignment given)")
     log.info(f"Branches to label: {branches_to_label}")
 
     ## test that labels do not overlap if there are several lists passed
@@ -292,7 +298,8 @@ def main():
         )
 
         ## Create list
-        branches_to_keep_list = read_labels(branches_to_keep)
+        branches_to_keep_list = (branches_to_keep if isinstance(branches_to_keep, list)
+                         else read_labels(branches_to_keep))
 
         branches_to_keep_clean = [
             leaf.name

@@ -14,7 +14,7 @@ rule extract_busted:
     threads:
         config["resources"]["busted"]["threads"]
     resources:
-        runtime = "15m",
+        runtime = "5m",
         mem_mb = config["resources"]["busted"]["mem_mb"]
     shell:
         """
@@ -40,7 +40,7 @@ rule extract_absrel:
     threads:
         config["resources"]["busted"]["threads"]
     resources:
-        runtime = "15m",
+        runtime = "5m",
         mem_mb = config["resources"]["busted"]["mem_mb"]
     shell:
         """
@@ -65,7 +65,7 @@ rule extract_meme:
     threads:
         config["resources"]["busted"]["threads"]
     resources:
-        runtime = "15m",
+        runtime = "5m",
         mem_mb = config["resources"]["busted"]["mem_mb"]
     shell:
         """
@@ -84,12 +84,12 @@ rule extract_relax:
         relax = "codon_alignments/{transcript_id}/HyPhy_output/{transcript_id}.relax.g_tree.tsv"
     params:
         script = f"{workflow.basedir}/scripts/extract_hyphy.py",
-    group: "relax_post"
+    localrule: True,
     log:
         "logs/extract_relax/{transcript_id}.log"
     threads: 1,
     resources:
-        runtime = "15m",
+        runtime = "5m",
         mem_mb = config["resources"]["busted"]["mem_mb"]
     shell:
         """
