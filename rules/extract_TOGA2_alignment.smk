@@ -21,12 +21,15 @@ rule extract_ali:
         mem_mb = config["resources"]["extractAlignments"]["mem_mb"],
         runtime = "10h",
     group: "align_clean"
+    ## HmmCleaner is not on bioconda
+    container:
+        "docker://ghcr.io/hillerlab/toga2_local:latest"
     log:
         "logs/extract_ali/{transcript_id}.log"
     shell:
         """
         set -euo pipefail
-        toga2 sequence-alignment \
+        toga2.py sequence-alignment \
               -v \
               -a {params.aligner} \
               -re {params.twoBit} \

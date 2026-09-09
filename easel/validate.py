@@ -29,8 +29,8 @@ CODON_AWARE_ALIGNERS = {"macse2", "prank_codon"}
 ## (Snakefile_standard include block).
 ## ISSUE: TOGA2 should be able to also run macse2/prank_codon
 ALIGNERS_BY_MODE = {
-    "toga":  {"prank", "muscle", "macse2"},
-    "toga2": {"prank", "muscle", "macse2"},
+    "toga":  {"prank"},
+    "toga2": {"prank"},
     "free":  {"prank_nt", "prank_codon", "macse2", "muscle"},
 }
 
@@ -130,7 +130,7 @@ def _check_paths(args, r: Resolved):
         (args.toga2_directory,  "-toga2/--toga2_reference_path"),
         (args.free_directory,   "-free/--free_mode"),
         (args.input_gene_trees, "--input_gene_trees"),
-        (getattr(args, "profile", None), "--profile"),
+        #(getattr(args, "profile", None), "--profile"),
     ]
     for value, flag in files:
         if not value:
