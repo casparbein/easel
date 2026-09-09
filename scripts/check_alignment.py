@@ -65,9 +65,6 @@ def check(path, min_taxa=4, foreground=(), min_ungapped_fraction=0.1):
             return "SKIP", (f"sequence {curr_name} is only gaps or ambigous characters, "
                         f"IQtree cannot handle this.")
 
-    if all(all(c in GAP_CHARS for c in col) for col in zip(*seqs)):
-        return "SKIP", "every alignment column is gaps or N"
-
     ## RELAX is run with --test Foreground and hard-fails if no branch carries
     ## the label, so a transcript that lost all its foreground taxa during
     ## cleaning has to be skipped rather than attempted.

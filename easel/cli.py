@@ -11,6 +11,7 @@ from ruamel.yaml import YAML, comments
 from ruamel.yaml.scalarstring import SingleQuotedScalarString
 import subprocess
 import signal
+import re
 
 ## import command line function to set up snakemake environment and run snakemake once DEF file is constructed
 from . import preprocess as preprocess_input
@@ -581,8 +582,6 @@ def parse_parameter_lists(comma_separated_list, program_name):
         out_string = " ".join(["-" + text_num_split(entry) for entry in comma_separated_list.split(",")])
     return out_string
 
-import re
-
 ## ISSUE: Aren't these parameters already processed above?
 def parse_manual_cleaner_params(comma_separated_list, param_name):
     entries = [e.strip() for e in comma_separated_list.split(",") if e.strip()]
@@ -606,7 +605,7 @@ def parse_manual_cleaner_params(comma_separated_list, param_name):
 
 
 ## Input helper functions (from polymeval)
-def get_snakefile_path(name="Snakefile"):
+def get_snakefile_path(name):
     snakefile = os.path.join(BASE_DIR, name)
     return snakefile
 
@@ -1021,7 +1020,6 @@ def _invoke_snakemake(cmd, cwd, drop=None):
 
 ## function to run snakemake (adapted from polymeval)
 def run_snakemake(snake_file,
-                  fasta_path,
                   directory_name="easel_run",
                   dryrun=True,
                   snake_default=False,
@@ -1493,7 +1491,6 @@ def main():
     if args.dry_run or args.run_snakemake:
         returncode = run_snakemake(
             snake_file=snakefile,
-            fasta_path=Fasta_path,
             directory_name=args.directory_name,
             dryrun=args.dry_run,
             snake_default=True,

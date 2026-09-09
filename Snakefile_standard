@@ -65,8 +65,6 @@ def gather_input():
     
     return all_input
 
-all_input = gather_input()
-
 rule all:
     input:
         skip_on_import(gather_input),

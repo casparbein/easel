@@ -332,7 +332,6 @@ def run_toga_mode(
     ## --- Determine transcript set ---
     if bed_path:
         transcripts = parse_bed12(bed_path)
-        print(len(transcripts))
     else:
         logger.critical(
             "No bed_file provided. Please provide a bed file if TOGA transcripts should be run."
@@ -497,8 +496,6 @@ def run_free_mode(
     foreground_list: str | None,
     max_cds: int,
     min_cds: int,
-    assembly_path:  str | None = None,
-    precomp_gene_tree_path: str | None = None,
 ) -> tuple[list[str], list[dict]]:
     """Main logic for free mode.
 
@@ -771,7 +768,6 @@ def run_preprocessing(
             fasta_path=fasta_path,
             foreground_list=foreground_list,
             min_species=min_species,
-            assembly_path=assembly_file,
             max_cds=max_cds,
             min_cds=min_cds,
         )

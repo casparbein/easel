@@ -43,8 +43,6 @@ def gather_input():
 
     return all_input
 
-all_input = gather_input()
-
 # Define a new default target 
 rule all:
     input:
