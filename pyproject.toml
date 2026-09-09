@@ -1,13 +1,10 @@
 [build-system]
-requires = ["setuptools>=68", "setuptools-scm>=8", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "easel"
 dynamic = ["version"]
-
-[tool.setuptools_scm]
-version_file = "easel/_version.py"
 
 description = "Selection screens with HyPhy over thousands of coding sequences"
 readme = "README.md"
@@ -41,8 +38,8 @@ dev = ["pytest>=7"]
 easel = "easel.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/ORG/easel"
-Issues = "https://github.com/ORG/easel/issues"
+Homepage = "https://github.com/casparbein/easel"
+Issues = "https://github.com/casparbein/easel/issues"
 
 [tool.setuptools]
 # Workflow files live outside the package directory and must be installed with
