@@ -9,7 +9,9 @@ Feel free to open a GitHub issue whenever something does not work properly
 ## Requirements
 
 While easel has a `--local` mode, it's best used on an HPC. \
-Currently, easel requires the slurm scheduling system and mamba or conda (see "Install").
+Currently, easel requires:
+- **Slurm** as the scheduling system
+- **mamba** and/or **conda** (see "Install").
 
 ## Install
 
@@ -105,6 +107,14 @@ screen -r easel_run ## if a screen with the name easel_run exists
 
 > **Untested for remote submission:** 
 Potentially, easel jobs can also be submitted to another node through `sbatch`, although there might arise conflicts for where snakemake will submit easel-spawned jobs, and sometimes remote nodes do not have internet access, leading to failed conda downloads and other cryptic errors.
+
+## Settings
+
+While most settings can be adapted through the command line interface, there are currently some hard-coded parameters present in easel. Open an issue if you want to see these changed.
+
+- **TOGA2**: only Fully Intact, Intact and partially Intact annotations are extracted and alignment is done exon-by-exon
+- **Codonification**: Frameshifts will be masked one codon up- and downstream of the shifted codon
+- **IQtree3**: Only MG/MGK models are considered in the model selection step, and NNI optimization is run for 50 iterations
 
 
 ## Test data
@@ -307,6 +317,10 @@ Selection screens:
   - [MEME](https://hyphy.org/methods/meme/)
   - [RELAX](https://hyphy.org/methods/relax/)
 - [BayesCode](https://github.com/ThibaultLatrille/bayescode)
+
+## Usage of AI
+Claude (Anthropic) was used to assist in writing parts of the phase-implementation and extensively for code review.
+All AI-generated content was reviewed by the author, and the pipeline was extensively tested with real data by the author and several other people.
 
 ## Known issues
 - Depending on the number of input sequences, DAG creation can take up to ~20-30 Minutes (>5000 input sequences), mostly for dry-runs 
