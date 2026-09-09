@@ -159,17 +159,63 @@ def _check_paths(args, r: Resolved):
         elif not os.listdir(value):
             r.errors.append(f"{flag}: directory is empty: {value}")
 
-
 def _check_profile(args, r: Resolved):
-    """A snakemake profile is a DIRECTORY holding config.yaml/config.v8+.yaml."""
+    """A profile may be a DIRECTORY holding config.yaml, or the YAML file itself.
+
+    snakemake accepts both, and a single file is what most people actually want
+    when all they are changing is the partition -- so easel accepts both too,
+    rather than making them build a directory around one file.
+    """
     profile = getattr(args, "profile", None)
-    if not profile or not os.path.isdir(profile):
-        return                                   # existence handled in _check_paths
-    if not any(os.path.isfile(os.path.join(profile, name))
-               for name in ("config.yaml", "config.yml", "config.v8+.yaml")):
+    if not profile:
+        return
+    if not os.path.exists(profile):
+        r.errors.append(f"--profile: no such file or directory: {profile}")
+        return
+
+    if os.path.isdir(profile):
+        if not any(os.path.isfile(os.path.join(profile, name))
+                   for name in ("config.yaml", "config.yml", "config.v8+.yaml")):
+            r.errors.append(
+                f"--profile {profile} is a directory but contains no config.yaml; "
+                f"either put one there or pass the YAML file directly")
+            return
+        config_path = next(
+            os.path.join(profile, name)
+            for name in ("config.yaml", "config.yml", "config.v8+.yaml")
+            if os.path.isfile(os.path.join(profile, name)))
+    else:
+        config_path = profile
+
+    ## Parse it here rather than letting snakemake fail after the run directory
+    ## and DEF.yaml have already been written.
+    if os.path.getsize(config_path) == 0:
+        r.errors.append(f"--profile: {config_path} is empty")
+        return
+    try:
+        from ruamel.yaml import YAML
+        with open(config_path, encoding="utf-8") as handle:
+            loaded = YAML(typ="safe").load(handle)
+    except Exception as exc:                                       # noqa: BLE001
+        r.errors.append(f"--profile: {config_path} is not readable as YAML: {exc}")
+        return
+    if not isinstance(loaded, dict):
         r.errors.append(
-            f"--profile {profile} contains no config.yaml; a snakemake profile "
-            f"is a directory holding one")
+            f"--profile: {config_path} must contain a mapping of snakemake "
+            f"options, got {type(loaded).__name__}")
+        return
+    ## run_snakemake passes --cores instead of --profile under --local, so the
+    ## profile is read here, validated, and then never used. Say so rather than
+    ## letting someone wonder why their partition setting had no effect.
+    if getattr(args, "local_run", False):
+        r.warnings.append(
+            "--profile is ignored with --local: easel runs snakemake with "
+            "--cores instead of a profile")
+    elif "executor" not in loaded:
+        r.warnings.append(
+            f"--profile {config_path} sets no 'executor:'; easel assumes a "
+            f"cluster profile unless --local is given")
+
 
 
 def _check_mode_and_reference(args, r: Resolved):

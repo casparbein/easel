@@ -1018,6 +1018,24 @@ def _invoke_snakemake(cmd, cwd, drop=None):
     return process.returncode, interrupted
 
 
+## Helper functions for mounting apptainer paths:
+def get_mount_point(path):
+    path = os.path.realpath(os.path.abspath(path))
+    while not os.path.ismount(path):
+        path = os.path.dirname(path)
+    return path
+
+## Apptainer arguments
+def get_apptainer_bind_args(paths):
+    mount_points = set()
+    for path in paths:
+        if path and os.path.exists(path):
+            mp = get_mount_point(path)
+            if mp != '/':  # skip root
+                mount_points.add(mp)
+    return " ".join(f"-B {mp}:{mp}" for mp in mount_points)
+
+
 ## function to run snakemake (adapted from polymeval)
 def run_snakemake(snake_file,
                   directory_name="easel_run",
@@ -1031,6 +1049,7 @@ def run_snakemake(snake_file,
                   profile=None,
                   conda_prefix=None,
                   apptainer_prefix=None,
+                  apptainer_args=None,
                   max_failed_fraction=0.4):
     """Build and run the snakemake command line(s). Returns the exit code.
 
@@ -1071,6 +1090,9 @@ def run_snakemake(snake_file,
     ## conda environments already share out of BASE_DIR.
     cmd += ["--use-apptainer", "--apptainer-prefix",
             apptainer_prefix or os.path.join(BASE_DIR, ".snakemake", "apptainer")]
+    
+    if apptainer_args:
+        cmd += ['--apptainer-args', apptainer_args]
 
     if rerun_triggers:
         cmd += ["--rerun-triggers", "mtime"]
@@ -1345,6 +1367,14 @@ def main():
         config["settings"]['treeSettings']["computeGeneTrees"]["activate"] = False
         config["settings"]["selectionSettings"]["bayesCode"]["activate"] = False
 
+    ## Apptainer arguments:
+    if config["toga2Mode"]:
+        apptainer_args = get_apptainer_bind_args([
+            args.twoBitPath,
+        ])
+    else:
+        apptainer_args = None
+
     ## --------------------------------------------------------------------------
     ## Create DEF.yaml
     ## --------------------------------------------------------------------------
@@ -1501,6 +1531,7 @@ def main():
             profile=args.profile,
             conda_prefix=args.conda_prefix,
             apptainer_prefix=args.apptainer_prefix,
+            apptainer_args=apptainer_args,
             max_failed_fraction=args.max_failed_fraction,
         )
         ## Propagate failure. Previously the return code was never inspected, so
@@ -1511,7 +1542,6 @@ def main():
           "DEF.yaml written but nothing was executed. Add -dr for a dry run, or "
           "-rs to launch the pipeline."
         )
-
 
 if __name__ == "__main__":
     main()
