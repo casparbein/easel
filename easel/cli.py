@@ -1069,7 +1069,11 @@ def run_snakemake(snake_file,
     if local_run:
         cmd += ["--cores", str(cores), "--max-threads", str(cores)]
     else:
-        cmd += ["--profile", profile or get_cluster_configfile_path()]
+        profile_path = (os.path.abspath(profile) if profile
+                        else get_cluster_configfile_path())
+        cmd += ["--profile", profile_path]
+
+        #cmd += ["--profile", profile or get_cluster_configfile_path()]
 
     ## Conda prefix must point to easel base directory, otherwise each run will download
     ## all dependencies again, which is unnecessary overload
