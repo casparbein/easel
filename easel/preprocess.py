@@ -677,10 +677,15 @@ def fingerprint_fasta_path(
     for f in files:
         try:
             st = os.stat(f)
-            stats.append([os.path.relpath(f, fasta_path), st.st_mtime_ns, st.st_size])
+            stats.append((os.path.relpath(f, fasta_path), st.st_mtime_ns, st.st_size))
         except OSError:
-            stats.append([os.path.relpath(f, fasta_path), None, None])
-    return sorted(stats)
+            stats.append((os.path.relpath(f, fasta_path), None, None))
+
+    digest = hashlib.sha256()
+    digest.update(f"{len(stats)}\n".encode())
+    for relpath, mtime, size in sorted(stats):
+        digest.update(f"{relpath.replace(os.sep, '/')}\0{mtime}\0{size}\n".encode())
+    return digest.hexdigest()
 
 
 ## ---------------------------------------------------------------------------
