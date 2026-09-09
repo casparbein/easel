@@ -1369,9 +1369,16 @@ def main():
 
     ## Apptainer arguments:
     if config["toga2Mode"]:
-        apptainer_args = get_apptainer_bind_args([
-            args.twoBitPath,
-        ])
+        apptainer_list = [
+            path_to_snakemake_dir,
+            Fasta_path,
+            ]
+        apptainer_list.append(args.twoBitPath)
+        if config["settings"]["treeSettings"]["inputSpeciesTree"]["treeFile"]:
+            apptainer_list.append(config["settings"]["treeSettings"]["inputSpeciesTree"]["treeFile"])
+        
+        apptainer_args = get_apptainer_bind_args(
+            apptainer_list )
     else:
         apptainer_args = None
 
