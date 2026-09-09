@@ -26,10 +26,10 @@ rule extract_ali:
     threads: 1,
     resources:
         runtime = "5m"
-    group: "align_clean"
+    group: ALIGN_CLEAN_GROUP
     log:
         "logs/extract_ali/{transcript_id}.log"
-    conda:
-        "../envs/manual_cleaner.yaml"
+    # conda:
+    #     "../envs/manual_cleaner.yaml"
     script:
         "../scripts/manual_filter_msa.py"

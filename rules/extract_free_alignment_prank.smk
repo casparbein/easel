@@ -51,8 +51,8 @@ rule rule rename_prank:
     group: "align_clean"
     log:
         "logs/rename_prank/{transcript_id}.log"
-    conda:
-        "../envs/manual_cleaner.yaml"
+    # conda:
+    #     "../envs/manual_cleaner.yaml"
     script:
         "../scripts/manual_filter_msa.py"
 

@@ -35,7 +35,7 @@ rule validate_alignment:
     threads: 1,
     resources:
         runtime = "10m",
-    group: "align_clean"
+    group: ALIGN_CLEAN_GROUP
     log:
         "logs/validate_alignment/{transcript_id}.log"
     script:

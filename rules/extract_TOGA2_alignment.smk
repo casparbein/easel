@@ -58,7 +58,7 @@ rule clean_TOGA2_stop:
     group: "align_clean"
     log:
         "logs/clean_TOGA2_stop/{transcript_id}.log"
-    conda:
-        "../envs/manual_cleaner.yaml"
+    # conda:
+    #     "../envs/manual_cleaner.yaml"
     script:
         "../scripts/manual_filter_msa.py"

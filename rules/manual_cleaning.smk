@@ -27,7 +27,7 @@ rule manual_cleaner:
     group: "align_clean"
     log:
         "logs/manual_cleaner/{transcript_id}.log"
-    conda:
-        "../envs/manual_cleaner.yaml"
+    # conda:
+    #     "../envs/manual_cleaner.yaml"
     script:
         "../scripts/manual_filter_msa.py"

@@ -23,7 +23,7 @@ rule keep_final_alignment:
         ali = get_input_for_tree,
     output:
         ali = "codon_alignments/{transcript_id}/{transcript_id}.final.fa",
-    group: "align_clean"
+    group: ALIGN_CLEAN_GROUP
     resources:
         runtime = "5m",
     log:

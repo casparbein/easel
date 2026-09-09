@@ -314,6 +314,13 @@ def resolve_run_inputs():
 
     return transcripts
 
+## Functions to turn cheap phase 1 rules into localrules:
+def align_clean_is_trivial():
+    """True when align_clean holds no aligner, i.e. --do_screen_only."""
+    return bool(config["settings"]["selectionSettings"]["doScreenOnly"])
+
+ALIGN_CLEAN_GROUP = None if align_clean_is_trivial() else "align_clean"
+
 ## ---------------------------------------------------------------------------
 ## Two-phase run: parse-time verdicts instead of a checkpoint
 ## ---------------------------------------------------------------------------
