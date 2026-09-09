@@ -4,6 +4,7 @@ from ete4 import Tree
 import argparse
 import sys
 import logging
+import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _seqio import read_names  # noqa: E402
