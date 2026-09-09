@@ -1367,20 +1367,6 @@ def main():
         config["settings"]['treeSettings']["computeGeneTrees"]["activate"] = False
         config["settings"]["selectionSettings"]["bayesCode"]["activate"] = False
 
-    ## Apptainer arguments:
-    if config["toga2Mode"]:
-        apptainer_list = [
-            path_to_snakemake_dir,
-            Fasta_path,
-            ]
-        apptainer_list.append(args.twoBitPath)
-        if config["settings"]["treeSettings"]["inputSpeciesTree"]["treeFile"]:
-            apptainer_list.append(config["settings"]["treeSettings"]["inputSpeciesTree"]["treeFile"])
-        
-        apptainer_args = get_apptainer_bind_args(
-            apptainer_list )
-    else:
-        apptainer_args = None
 
     ## --------------------------------------------------------------------------
     ## Create DEF.yaml
@@ -1395,6 +1381,21 @@ def main():
     ## place that guarantee is implemented, so the two can't drift apart.
     path_for_DEF = os.path.join(os.getcwd(), args.directory_name, yaml_name)
     path_to_snakemake_dir = _ensure_directory(os.path.join(os.getcwd(), args.directory_name))
+
+    ## Apptainer arguments:
+    if config["toga2Mode"]:
+        apptainer_list = [
+            path_to_snakemake_dir,
+            Fasta_path,
+            ]
+        apptainer_list.append(args.twoBitPath)
+        if config["settings"]["treeSettings"]["inputSpeciesTree"]["treeFile"]:
+            apptainer_list.append(config["settings"]["treeSettings"]["inputSpeciesTree"]["treeFile"])
+        
+        apptainer_args = get_apptainer_bind_args(
+            apptainer_list )
+    else:
+        apptainer_args = None
 
     ## Load any DEF.yaml already sitting in this run directory once, up front --
     ## used both to decide whether preprocessing needs to rerun (below) and,
