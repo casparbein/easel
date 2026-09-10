@@ -97,8 +97,8 @@ def toga_run_dir(toga_path, assembly):
 def check_toga_run_dirs(toga_path, assemblies):
     """Every assembly must have a run directory under *toga_path*.
     """
-    missing = [a for a in assemblies if toga_run_dir(toga_path, a) is None]
-    return True
+    #missing = [a for a in assemblies if toga_run_dir(toga_path, a) is None]
+    return all(toga_run_dir(toga_path, a) is not None for a in assemblies)
 
 
 ## ---------------------------------------------------------------------------
