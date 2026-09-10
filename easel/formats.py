@@ -99,7 +99,8 @@ def check_toga_run_dirs(toga_path, assemblies):
     """
     missing = [a for a in assemblies if toga_run_dir(toga_path, a) is None]
     if missing:
-        _fail("The follwing content:%s of passed TOGA input path: %s is not a valid directory.", missing, toga_path)
+        shown = ", ".join(missing[:5]) + (" ..." if len(missing) > 5 else "")
+        _fail("The follwing content:%s of passed TOGA input path: %s is not a valid directory. Check TOGA input path and the passed assemblies list (-asm)", shown, toga_path)
     return True
 
 
