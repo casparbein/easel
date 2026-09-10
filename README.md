@@ -142,12 +142,12 @@ mkdir easel_test_run_toga
 ## Create a directory where to download TOGA2 result directories into (structure is reference/TOGA2)
 mkdir -p hg38/TOGA2
 cd hg38/TOGA2/
-wget -r -nH --cut-dirs=4 --no-parent -R -e robots=off 'index.html*' https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Acinonyx_jubatus__cheetah__HLaciJub2__GCA_003709585.1/
-wget -r -nH --cut-dirs=4 --no-parent -R -e robots=off 'index.html*' https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Bison_bonasus__European_bison__HLbisBon1__GCA_963879515.1/
-wget -r -nH --cut-dirs=4 --no-parent -R -e robots=off 'index.html*' https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Canis_lupus_familiaris__dog__canFam4__GCA_011100685.1/
-wget -r -nH --cut-dirs=4 --no-parent -R -e robots=off 'index.html*' https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Choloepus_didactylus__southern_two-toed_sloth__HLchoDid2__GCF_015220235.1/
-wget -r -nH --cut-dirs=4 --no-parent -R -e robots=off 'index.html*' https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Equus_caballus__Horse__HLequCaba5__GCA_052818215.1/
-wget -r -nH --cut-dirs=4 --no-parent -R -e robots=off 'index.html*' https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Gorilla_gorilla__western_gorilla__HLgorGor7__GCA_029281585.3/
+wget -r -nH --cut-dirs=4 --no-parent -R 'index.html*' -e robots=off https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Acinonyx_jubatus__cheetah__HLaciJub2__GCA_003709585.1/
+wget -r -nH --cut-dirs=4 --no-parent -R 'index.html*' -e robots=off  https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Bison_bonasus__European_bison__HLbisBon1__GCA_963879515.1/
+wget -r -nH --cut-dirs=4 --no-parent -R 'index.html*' -e robots=off  https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Canis_lupus_familiaris__dog__canFam4__GCA_011100685.1/
+wget -r -nH --cut-dirs=4 --no-parent -R 'index.html*' -e robots=off  https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Choloepus_didactylus__southern_two-toed_sloth__HLchoDid2__GCF_015220235.1/
+wget -r -nH --cut-dirs=4 --no-parent -R 'index.html*' -e robots=off  https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Equus_caballus__Horse__HLequCaba5__GCA_052818215.1/
+wget -r -nH --cut-dirs=4 --no-parent -R 'index.html*' -e robots=off  https://genome.senckenberg.de/download/TOGA2/TOGA2/reference_human_hg38/Gorilla_gorilla__western_gorilla__HLgorGor7__GCA_029281585.3/
 
 ## Create assembly list from directory names
 ls > ../../easel_test_run_toga/assembly_list.txt
