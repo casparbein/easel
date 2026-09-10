@@ -753,7 +753,9 @@ def _validation_gate(snakemake_dir, max_failed_fraction):
         return True, (
             f"Phase 1: {tally}. The {failed} without an alignment are excluded "
             f"and listed in {VERDICT_SUMMARY}; their tmp/ directories are left "
-            f"in place to inspect."), "warning"
+            f"in place to inspect. If alignment failed through a prank seg fault,"
+            f"this will be recorded in .snakemake/slurm_logs/group_name/Number.log"
+            f", and search for the gene name with grep."), "warning"
     return True, f"Phase 1: {tally}.", "info"
 
 
