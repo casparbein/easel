@@ -4,8 +4,7 @@ rule extract_ali_muscle_afa:
         in_fasta =  f"{config["fastaPath"]}{{transcript_id}}{config["fileSuffix"]}"
     output:
         out_fasta = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori.afa",
-    threads:
-        10
+    threads: 16
     resources:
         mem_mb = 20000,
         runtime = "10h",

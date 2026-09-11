@@ -499,14 +499,14 @@ def selection_parser():
             help=f"Memory in MB for {label}. (default: %(default)s)")
 
     add_resource("extract_alignments", 1, 10000, "alignment extraction")
-    add_resource("hmmcleaner", 1, 1000, "HmmCleaner")
-    add_resource("manualcleaner", 1, 1000, "manual cleaner")
-    add_resource("tree_comp", 4, 15000, "tree computation")
-    add_resource("prank", 5, 5000, "PRANK")
-    add_resource("absrel", 5, 10000, "aBSREL")
-    add_resource("busted", 5, 10000, "BUSTED")
-    add_resource("meme", 5, 10000, "MEME")
-    add_resource("relax", 10, 10000, "RELAX")
+    add_resource("hmmcleaner", 1, 500, "HmmCleaner")
+    add_resource("manualcleaner", 1, 500, "manual cleaner")
+    add_resource("tree_comp", 16, 2500, "tree computation")
+    add_resource("prank", 1, 5000, "PRANK")
+    add_resource("absrel", 4, 5000, "aBSREL")
+    add_resource("busted", 4, 5000, "BUSTED")
+    add_resource("meme", 4, 5000, "MEME")
+    add_resource("relax", 4, 5000, "RELAX")
 
     args = app.parse_args()
     return args

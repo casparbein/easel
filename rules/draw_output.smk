@@ -36,7 +36,7 @@ rule draw_output:
     threads:
         1
     resources:
-        runtime = "30m",
+        runtime = "10m",
         mem_mb = 5000
     conda:
         "../envs/draw_output.yaml"

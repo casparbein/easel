@@ -5,8 +5,7 @@ rule extract_ali_macse2:
     output:
         out_fasta_nt = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori_raw.fa",
         out_fasta_aa = "codon_alignments/{transcript_id}/tmp/{transcript_id}_ori_aa.fa"
-    threads:
-        5
+    threads: 1
     resources:
         runtime = "4h",
         mem_mb = 20000

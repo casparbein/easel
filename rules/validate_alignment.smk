@@ -34,7 +34,7 @@ rule validate_alignment:
         foreground = config["settings"]["selectionSettings"]["foregroundLst"] or [],
     threads: 1,
     resources:
-        runtime = "10m",
+        runtime = "5m",
     group: ALIGN_CLEAN_GROUP
     log:
         "logs/validate_alignment/{transcript_id}.log"
@@ -94,8 +94,8 @@ rule cleaning_report:
         script  = f"{workflow.basedir}/scripts/plot_cleaning.R",
     threads: 1
     resources:
-        mem_mb = 2000,
-        runtime = "10m",
+        mem_mb = 1500,
+        runtime = "5m",
     group: "align_clean"
     log:
         "logs/cleaning_report/{transcript_id}.log"

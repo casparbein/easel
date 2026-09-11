@@ -14,11 +14,10 @@ rule convert_to_phylip:
     group: "bayescode_stack"
     log:
         "logs/convert_to_phylip/{transcript_id}.log"
-    threads: 
-        1
+    threads: 1
     resources: 
         runtime = "10m",
-        mem_mb = 5000
+        mem_mb = 500
     conda:
         "../envs/bayescode.yaml"
     shell:
@@ -43,11 +42,10 @@ rule mutselomega_w0:
     group: "bayescode_stack"
     log:
         "logs/mutselomega_w0/{transcript_id}.log"
-    threads:
-        1
+    threads: 1
     resources:
         runtime = "8h",
-        mem_mb = 5000
+        mem_mb = 500
     conda:
         "../envs/bayescode.yaml"
     shell:
@@ -75,11 +73,10 @@ rule mutselomega_w:
     group: "bayescode_stack"
     log:
         "logs/mutselomega_w/{transcript_id}.log"
-    threads:
-        1
+    threads: 1
     resources:
         runtime = "8h",
-        mem_mb = 5000
+        mem_mb = 500
     conda:
         "../envs/bayescode.yaml"
     shell:
@@ -108,11 +105,10 @@ rule read_mutselomega_w:
     group: "bayescode_stack"
     log:
         "logs/read_mutselomega_w/{transcript_id}.log"
-    threads:
-        1
+    threads: 1
     resources:
         runtime = "10m",
-        mem_mb = 5000
+        mem_mb = 500
     conda:
         "../envs/bayescode.yaml"
     shell:
@@ -140,11 +136,10 @@ rule read_mutselomega_w0:
     group: "bayescode_stack"
     log:
         "logs/read_mutselomega_w0/{transcript_id}.log"
-    threads:
-        1
+    threads: 1
     resources:
         runtime = "10m",
-        mem_mb = 5000
+        mem_mb = 500
     conda:
         "../envs/bayescode.yaml"
     shell:
