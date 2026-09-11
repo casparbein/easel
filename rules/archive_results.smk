@@ -21,6 +21,7 @@
 rule keep_final_alignment:
     input:
         ali = get_input_for_tree,
+        cleaning = "codon_alignments/{transcript_id}/{transcript_id}.cleaning.pdf" if WANT_CLEANING_REPORT else [],
     output:
         ali = "codon_alignments/{transcript_id}/{transcript_id}.final.fa",
     group: ALIGN_CLEAN_GROUP

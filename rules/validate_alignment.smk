@@ -86,6 +86,7 @@ def transcript_targets(wildcards):
 rule cleaning_report:
     input:
         ali = get_input_for_tree,
+        validation = "codon_alignments/{transcript_id}/validation.txt",
     output:
         plot   = "codon_alignments/{transcript_id}/{transcript_id}.cleaning.pdf",
         report = "codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt",
