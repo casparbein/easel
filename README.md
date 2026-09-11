@@ -166,7 +166,7 @@ easel \
 -a prank \
 -ct \
 -bu srv \
--twoBit easel_test_run_toga/hg38.test.exons.2bit \
+--twoBit_path easel_test_run_toga/hg38.test.exons.2bit \
 -asm easel_test_run_toga/assembly_list.txt \
 -sb easel_test_run_toga/hg38.test.bed \
 -rs
