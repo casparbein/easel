@@ -44,4 +44,4 @@ rule clean_macse_stop:
     # conda:
     #     "../envs/manual_cleaner.yaml"
     script:
-        "../scripts/manual_filter_msa.py"
+        "../scripts/mask_terminal_stops.py"
