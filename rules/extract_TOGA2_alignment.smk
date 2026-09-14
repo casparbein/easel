@@ -19,7 +19,7 @@ rule extract_ali:
         config["resources"]["extractAlignments"]["threads"],
     resources:
         mem_mb = config["resources"]["extractAlignments"]["mem_mb"],
-        runtime = "24h",
+        runtime = "20h",
     group: "align_clean"
     ## TOGA2 is not on bioconda
     container:
