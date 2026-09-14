@@ -8,7 +8,7 @@ rule absrel_run:
     threads:
         config["resources"]["absrel"]["threads"]
     resources:
-        runtime = "4h",
+        runtime = "10h",
         mem_mb = config["resources"]["absrel"]["mem_mb"]
     params:
         mh = config["settings"]["selectionSettings"]["ABSREL"]["multi_hit"],
