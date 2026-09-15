@@ -637,7 +637,7 @@ def gather_hyphaeon(ids=None):
         hyphaeon_input.extend(
             expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.graphml", transcript_id=ids))
 
-    return bayescode_input
+    return hyphaeon_input
 
 
 def gather_busted(keyword, ids=None):
