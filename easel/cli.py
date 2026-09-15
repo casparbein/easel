@@ -261,6 +261,13 @@ def selection_parser():
       Run BayesCode (mutation-selection per-site omega estimation).
       """)
 
+    group_sel.add_argument(
+        "-hy", "--hyphaeon",
+        dest="hyphaeon", action="store_true", default=False,
+        help="""
+      Run Hyphaeon (Deep-learning based selection inference).
+      """)
+
     ## POTENTIAL ISSUE: We should implement disparate/partial Foreground lists
     group_sel.add_argument(
         "--foreground_list",
@@ -638,7 +645,7 @@ def _log_run_plan(config):
             else "free" if config["freeMode"] else "TOGA v1")
     analyses = [name for name, key in (("aBSREL", "ABSREL"), ("BUSTED", "BUSTED"),
                                        ("MEME", "MEME"), ("RELAX", "RELAX"),
-                                       ("BayesCode", "bayesCode"))
+                                       ("BayesCode", "bayesCode"), ("hyphaeon", "Hyphaeon"))
                 if sel.get(key, {}).get("activate")]
 
     logger.info("Run plan")
@@ -1295,6 +1302,9 @@ def main():
                 "bayesCode" : {
                   "activate": args.bayescode,
                 },
+                "hyphaeon": {
+                    "activate": args.hyphaeon,
+                },
             },
         },
         "resources": {
@@ -1372,6 +1382,7 @@ def main():
         config["settings"]["selectionSettings"]["MEME"]["activate"] = False
         config["settings"]['treeSettings']["computeGeneTrees"]["activate"] = False
         config["settings"]["selectionSettings"]["bayesCode"]["activate"] = False
+        config["settings"]["selectionSettings"]["hyphaeon"]["activate"] = False
 
 
     ## --------------------------------------------------------------------------
