@@ -71,9 +71,9 @@ rule hyphaeon_epistasis:
         ali  = get_input_ali_for_hyphy,
         tree = get_input_tree_for_hyphy
     output:
-        json = "codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.json"
-        csv = "codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.csv"
-        graph = "codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.graphml"
+        json = "codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.json",
+        csv = "codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.csv",
+        graph = "codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.graphml",
     localrule: True
     resources:
         runtime = "5min",
