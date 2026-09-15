@@ -41,6 +41,9 @@ def gather_input():
     all_input.extend(expand("codon_alignments/{transcript_id}/tmp.cleaned", transcript_id = attempted))
     all_input.append("skipped_transcripts.tsv")
     all_input.extend(expand("codon_alignments/{transcript_id}/results.cleaned", transcript_id = attempted))
+
+    if config["settings"]["selectionSettings"]["hyphaeon"]["activate"]:
+        all_input.extend(gather_hyphaeon(usable)),
     #all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.final.fa", transcript_id = attempted))
     #all_input.extend(expand("codon_alignments/{transcript_id}/{transcript_id}.cleaning.txt", transcript_id = attempted))
 
@@ -135,6 +138,8 @@ if config["settings"]["selectionSettings"]["BUSTED"]["activate"]:
     include: "rules/run_busted.smk"
 if config["settings"]["selectionSettings"]["bayesCode"]["activate"]:
     include: "rules/run_bayescode.smk"
+if config["settings"]["selectionSettings"]["hyphaeon"]["activate"]:
+    include: "rules/run_hyphaeon.smk"
     
 
 if any([config["settings"]["selectionSettings"]["ABSREL"]["activate"], 
