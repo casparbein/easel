@@ -621,21 +621,21 @@ def gather_hyphaeon(ids=None):
     hyphaeon_input = []
     if config["settings"]["selectionSettings"]["hyphaeon"]["activate"]:
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.meme.json, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.meme.json", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.meme.csv, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.meme.csv", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.attr.json, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.attr.json", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.dms.json, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.dms.json", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.dms.csv, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.dms.csv", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.json, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.json", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.csv, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.csv", transcript_id=ids))
         hyphaeon_input.extend(
-            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.graphml, transcript_id=ids"))
+            expand("codon_alignments/{transcript_id}/hyphaeon/{transcript_id}.ep.graphml", transcript_id=ids))
 
     return bayescode_input
 
