@@ -12,14 +12,14 @@ rule hyphaeon_meme:
     log: "logs/hyphaeon_meme/{transcript_id}.log"
     conda: "../envs/hyphaeon.yaml"
     shell:
-    """
-    hyphaeon meme \
-    -a {input.ali} \
-    -t {input.tree} \
-    -o {output.json} \
-    -c {output.csv}
-    >> {log} 2>&1
-    """
+        """
+        hyphaeon meme \
+        -a {input.ali} \
+        -t {input.tree} \
+        -o {output.json} \
+        -c {output.csv}
+        >> {log} 2>&1
+        """
 
 rule hyphaeon_attribute:
     input:
@@ -34,14 +34,14 @@ rule hyphaeon_attribute:
     log: "logs/hyphaeon_attribute/{transcript_id}.log"
     conda: "../envs/hyphaeon.yaml"
     shell:
-    """
-    hyphaeon meme \
-    -a {input.ali} \
-    -t {input.tree} \
-    --attribute \
-    -o {output.json} 
-    >> {log} 2>&1
-    """
+        """
+        hyphaeon meme \
+        -a {input.ali} \
+        -t {input.tree} \
+        --attribute \
+        -o {output.json} 
+        >> {log} 2>&1
+        """
 
 rule hyphaeon_dms:
     input:
@@ -57,14 +57,14 @@ rule hyphaeon_dms:
     log: "logs/hyphaeon_dms/{transcript_id}.log"
     conda: "../envs/hyphaeon.yaml"
     shell:
-    """
-    hyphaeon dms \
-    -a {input.ali} \
-    -t {input.tree} \
-    -o {output.json} \
-    -c {output.csv}
-    >> {log} 2>&1
-    """
+        """
+        hyphaeon dms \
+        -a {input.ali} \
+        -t {input.tree} \
+        -o {output.json} \
+        -c {output.csv}
+        >> {log} 2>&1
+        """
 
 rule hyphaeon_epistasis:
     input:
@@ -81,16 +81,16 @@ rule hyphaeon_epistasis:
     log: "logs/hyphaeon_epistasis/{transcript_id}.log"
     conda: "../envs/hyphaeon.yaml"
     shell:
-    """
-    hyphaeon epistasis \
-    -a {input.ali} \
-    -t {input.tree} \
-    --min-sim 0.30 \
-    --n-permutations 10000 \
-    --max-perm-p 0.05 \
-    -o {output.json} \
-    -c {output.csv} \
-    --graphml {output.graph}
-    >> {log} 2>&1
-    """
+        """
+        hyphaeon epistasis \
+        -a {input.ali} \
+        -t {input.tree} \
+        --min-sim 0.30 \
+        --n-permutations 10000 \
+        --max-perm-p 0.05 \
+        -o {output.json} \
+        -c {output.csv} \
+        --graphml {output.graph}
+        >> {log} 2>&1
+        """
 
