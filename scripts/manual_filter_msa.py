@@ -25,8 +25,42 @@ LOG_LEVEL = logging.INFO
 
 GOOD_BASES = frozenset("ATGCatgc")
 STOP_CODONS = frozenset({"TAG", "TGA", "TAA"})
+GAP = "-"
 
 _CODON_IS_GOOD: dict[str, bool] = {}
+
+GAP = "-"
+
+## Hmm Cleaner can produce ragged edges because it apparently removes "-" characters at the end
+def _pad_ragged_ends(
+    fasta_dict: dict[str, str], fasta_file: str, max_end_pad: int
+) -> None:
+    """
+    Right-pad sequences with gaps to the length of the longest sequence (the
+    anchor). Modifies fasta_dict in place.
+    """
+    lengths = {name: len(seq) for name, seq in fasta_dict.items()}
+    target = max(lengths.values())
+    shortfall = target - min(lengths.values())
+
+    if shortfall == 0:
+        return
+
+    anchors = [n for n, l in lengths.items() if l == target]
+    to_pad = [n for n, l in lengths.items() if l < target]
+    for name in to_pad:
+        fasta_dict[name] = fasta_dict[name].ljust(target, GAP)
+
+    log.warning(
+        "Extending alignment end in %r: padded %d sequence(s) with up to %d "
+        "trailing gap(s) to match anchor %r (%d nt%s).",
+        fasta_file,
+        len(to_pad),
+        shortfall,
+        anchors[0],
+        target,
+        f", shared by {len(anchors)} sequences" if len(anchors) > 1 else "",
+    )
 
 ## Read/Write input
 def read_fasta(fasta_file: str) -> dict[str, str]:
@@ -41,12 +75,7 @@ def read_fasta(fasta_file: str) -> dict[str, str]:
     for name, seq in iter_fasta(fasta_file, full_header=False):
         fasta_dict[name] = seq
 
-    lengths = {len(s) for s in fasta_dict.values()}
-    if len(lengths) != 1:
-        raise ValueError(
-            f"Sequences in {fasta_file!r} do not all have the same length "
-            f"(found lengths: {sorted(lengths)}). Not a valid alignment."
-        )
+    _pad_ragged_ends(fasta_dict, fasta_file, max_end_pad)
 
     aln_len = lengths.pop()
     n_seqs = len(fasta_dict)
@@ -67,7 +96,6 @@ def read_fasta(fasta_file: str) -> dict[str, str]:
         n_codons,
     )
     return fasta_dict
-
 
 def write_alignment(
     fasta_dict: dict[str, str], names_to_keep: list[str], out_file: str | None = None
