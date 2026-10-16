@@ -76,7 +76,7 @@ def read_fasta(fasta_file: str) -> dict[str, str]:
 
     _pad_ragged_ends(fasta_dict, fasta_file)
 
-    aln_len = lengths.pop()
+    aln_len = len(next(iter(fasta_dict.values())))
     n_seqs = len(fasta_dict)
     n_codons = aln_len // 3
 
