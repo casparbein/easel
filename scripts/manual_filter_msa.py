@@ -33,8 +33,7 @@ GAP = "-"
 
 ## Hmm Cleaner can produce ragged edges because it apparently removes "-" characters at the end
 def _pad_ragged_ends(
-    fasta_dict: dict[str, str], fasta_file: str, max_end_pad: int
-) -> None:
+    fasta_dict: dict[str, str], fasta_file: str) -> None:
     """
     Right-pad sequences with gaps to the length of the longest sequence (the
     anchor). Modifies fasta_dict in place.
@@ -75,7 +74,7 @@ def read_fasta(fasta_file: str) -> dict[str, str]:
     for name, seq in iter_fasta(fasta_file, full_header=False):
         fasta_dict[name] = seq
 
-    _pad_ragged_ends(fasta_dict, fasta_file, max_end_pad)
+    _pad_ragged_ends(fasta_dict, fasta_file)
 
     aln_len = lengths.pop()
     n_seqs = len(fasta_dict)
