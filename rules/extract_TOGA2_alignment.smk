@@ -23,7 +23,7 @@ rule extract_ali:
     group: "align_clean"
     ## TOGA2 is not on bioconda
     container:
-        "docker://ghcr.io/hillerlab/toga2_local:latest"
+        "docker pull ghcr.io/hillerlab/toga2_local:2.0.10"
     log:
         "logs/extract_ali/{transcript_id}.log"
     shell:
