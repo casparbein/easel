@@ -12,7 +12,7 @@ printshellcmds: False
 quiet:
   - rules
 scheduler: greedy
-latency-wait: 120
+latency-wait: 250
 default-resources:
     slurm_partition: "batch"
     runtime: 24h
