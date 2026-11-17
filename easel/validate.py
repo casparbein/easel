@@ -436,7 +436,7 @@ def _check_numbers_and_lists(args, r: Resolved):
     if args.minCDSLengthReference >= args.maxCDSLengthReference:
         r.errors.append(f"--min_CDS_length ({args.minCDSLengthReference}) must be "
                         f"below --max_CDS_length ({args.maxCDSLengthReference})")
-    floor = MIN_TAXA_IQTREE if args.tree else MIN_TAXA_HYPHY if not args.doAlignmentOnly else None
+    floor = MIN_TAXA_IQTREE if args.tree else MIN_TAXA_HYPHY if not args.doAlignmentOnly else 1
     if args.minNumAlignedSpecies < floor:
         r.errors.append(
             f"--min_num_aligned_species must be at least {floor} "
