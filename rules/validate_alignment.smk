@@ -28,7 +28,7 @@ rule validate_alignment:
     params:
         ## HyPhy needs >= 3 taxa; IQ-TREE bootstrapping wants >= 4.
         min_taxa = max(
-            3 if not config["settings"]["treeSettings"]["computeGeneTrees"]["activate"] else 4,
+            2 if config["settings"]["alignmentSettings"]["doAlignmentOnly"] else 3 if not config["settings"]["treeSettings"]["computeGeneTrees"]["activate"] else 4,
             0,
         ),
         foreground = config["settings"]["selectionSettings"]["foregroundLst"] or [],
